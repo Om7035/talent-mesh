@@ -31,9 +31,20 @@ async function bootstrap() {
 
   // ─────────────────────────────────────────
   // CORS
+  // Vercel generates a new deployment URL on every push (preview and
+  // git-branch URLs), so we allow any *.vercel.app subdomain of this
+  // project in addition to the configured production FRONTEND_URL.
   // ─────────────────────────────────────────
+  const allowedOrigins = [frontendUrl, 'http://localhost:3000'];
+  const vercelPreviewPattern = /^https:\/\/talent-mesh[a-z0-9-]*\.vercel\.app$/;
+
   app.enableCors({
-    origin: [frontendUrl, 'http://localhost:3000'],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || vercelPreviewPattern.test(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Not allowed by CORS: ${origin}`));
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
     credentials: true,
