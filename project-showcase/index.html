@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talent Mesh | Showcase Portal</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <span>Talent Mesh</span>
+                </div>
+                <button id="toggle-nav-btn" class="icon-btn"><i class="fa-solid fa-bars"></i></button>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-group">
+                    <h3>Introduction</h3>
+                    <a href="#landing" class="nav-link active" data-target="landing"><i class="fa-solid fa-house"></i> Home</a>
+                    <a href="#highlights" class="nav-link" data-target="highlights"><i class="fa-solid fa-star"></i> Key Features</a>
+                </div>
+                
+                <div class="nav-group">
+                    <h3>System Design</h3>
+                    <a href="#architecture" class="nav-link" data-target="architecture"><i class="fa-solid fa-layer-group"></i> Architecture</a>
+                    <a href="#database" class="nav-link" data-target="database"><i class="fa-solid fa-database"></i> Database Models</a>
+                    <a href="#tech-stack" class="nav-link" data-target="tech-stack"><i class="fa-solid fa-code"></i> Tech Stack</a>
+                </div>
+
+                <div class="nav-group">
+                    <h3>Deep Dives</h3>
+                    <a href="#escrow" class="nav-link" data-target="escrow"><i class="fa-solid fa-money-bill-transfer"></i> Escrow Engine</a>
+                    <a href="#recommendations" class="nav-link" data-target="recommendations"><i class="fa-solid fa-wand-magic-sparkles"></i> Recommendations</a>
+                    <a href="#messaging" class="nav-link" data-target="messaging"><i class="fa-solid fa-comments"></i> Real-time Messaging</a>
+                </div>
+
+                <div class="nav-group">
+                    <h3>Business Workflows</h3>
+                    <a href="#roles" class="nav-link" data-target="roles"><i class="fa-solid fa-users"></i> User Roles</a>
+                    <a href="#journey" class="nav-link" data-target="journey"><i class="fa-solid fa-route"></i> Project Journey</a>
+                    <a href="#lifecycle" class="nav-link" data-target="lifecycle"><i class="fa-solid fa-rotate"></i> Lifecycle</a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="main-content">
+            <div class="sections-container">
+                
+                <!-- Landing -->
+                <section id="landing" class="content-section active">
+                    <div class="hero">
+                        <div class="hero-content">
+                            <div class="badge">Enterprise Student Talent Platform</div>
+                            <h1 class="gradient-text">Talent Mesh</h1>
+                            <p class="tagline">Bridging the gap between student potential and industry demand through an intelligent, secure, and verifiable freelance ecosystem.</p>
+                            <div class="hero-stats">
+                                <div class="stat-card glass-panel">
+                                    <i class="fa-solid fa-users text-blue"></i>
+                                    <h3>5</h3>
+                                    <span>User Roles</span>
+                                </div>
+                                <div class="stat-card glass-panel">
+                                    <i class="fa-solid fa-vault text-purple"></i>
+                                    <h3>Secure</h3>
+                                    <span>Escrow Flow</span>
+                                </div>
+                                <div class="stat-card glass-panel">
+                                    <i class="fa-solid fa-bolt text-green"></i>
+                                    <h3>AI</h3>
+                                    <span>Matched</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Highlights -->
+                <section id="highlights" class="content-section">
+                    <div class="section-header">
+                        <h2>Key <span class="gradient-text">Features</span></h2>
+                        <p class="section-subtitle">The core value propositions of Talent Mesh.</p>
+                    </div>
+                    <div class="highlights-grid" id="highlights-grid"></div>
+                </section>
+
+                <!-- Architecture Hero -->
+                <section id="architecture" class="content-section hero-section">
+                    <div class="section-header">
+                        <h2>System <span class="gradient-text">Architecture</span></h2>
+                        <p class="section-subtitle">A layered breakdown of the engineering complexity powering Talent Mesh.</p>
+                    </div>
+                    <div class="system-flow-visual glass-panel" style="margin-bottom: 40px;">
+                        <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 24px; text-align: center;">High-Level Data Flow</h3>
+                        <div class="sf-container">
+                            <div class="sf-box" style="border-color: #787774; color: #787774;"><i class="fa-solid fa-laptop"></i><br>Browsers</div>
+                            <div class="sf-line"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                            <div class="sf-box" style="border-color: #0f7b6c; color: #0f7b6c;"><i class="fa-brands fa-react"></i><br>Next.js Frontend</div>
+                            <div class="sf-line"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                            <div class="sf-box sf-main" style="border-color: #2383e2; color: #2383e2;"><i class="fa-brands fa-node-js"></i><br>NestJS API Gateway</div>
+                            
+                            <div class="sf-branches">
+                                <div class="sf-branch-line"></div>
+                                <div class="sf-branch-nodes">
+                                    <div class="sf-box-small"><i class="fa-solid fa-key"></i> Auth (JWT)</div>
+                                    <div class="sf-box-small"><i class="fa-solid fa-plug"></i> Sockets + Redis</div>
+                                    <div class="sf-box-small"><i class="fa-solid fa-vault"></i> Escrow + Razorpay</div>
+                                </div>
+                            </div>
+                            
+                            <div class="sf-line" style="margin-top:20px;"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div class="sf-box" style="border-color: #9065b0; color: #9065b0;"><i class="fa-solid fa-database"></i><br>PostgreSQL Database</div>
+                        </div>
+                    </div>
+
+                    <div class="arch-complex glass-panel">
+                        <div class="arch-layer">
+                            <div class="layer-title"><i class="fa-brands fa-react"></i> Frontend Layer</div>
+                            <div class="layer-content">
+                                <div class="arch-component" data-info="Next.js App Router for Server-Side Rendering and fast SEO.">Next.js Pages</div>
+                                <div class="arch-component" data-info="Reusable UI components built with TailwindCSS and Radix UI.">Components</div>
+                                <div class="arch-component" data-info="React Context Providers managing global state (Auth, Socket, Theme).">Context Providers</div>
+                            </div>
+                        </div>
+                        <div class="arch-arrow">↓ REST API & WebSockets</div>
+                        <div class="arch-layer">
+                            <div class="layer-title"><i class="fa-brands fa-node-js"></i> Backend Layer (NestJS Gateway)</div>
+                            <div class="layer-content">
+                                <div class="arch-component" data-info="API endpoints handling incoming HTTP requests.">Controllers</div>
+                                <div class="arch-component" data-info="Core business logic containing recommendations, messaging, and escrow.">Services</div>
+                                <div class="arch-component" data-info="JWT Auth Guards and Role-Based Access Control (RBAC).">Guards</div>
+                                <div class="arch-component" data-info="Logging, Rate Limiting, and Exception Filtering.">Middleware</div>
+                            </div>
+                        </div>
+                        <div class="arch-arrow">↓ Pub/Sub, Queues, Storage</div>
+                        <div class="arch-layer">
+                            <div class="layer-title"><i class="fa-solid fa-server"></i> Infrastructure Layer</div>
+                            <div class="layer-content">
+                                <div class="arch-component" data-info="In-memory data store for caching and Socket.IO Pub/Sub adapter.">Redis</div>
+                                <div class="arch-component" data-info="Redis-backed queue system for background jobs (emails, AI scoring).">BullMQ</div>
+                                <div class="arch-component" data-info="Real-time bidirectional event-based communication.">Socket.IO</div>
+                                <div class="arch-component" data-info="Secure payment gateway webhook integration.">Razorpay</div>
+                            </div>
+                        </div>
+                        <div class="arch-arrow">↓ ORM mapping</div>
+                        <div class="arch-layer">
+                            <div class="layer-title"><i class="fa-solid fa-database"></i> Database Layer</div>
+                            <div class="layer-content">
+                                <div class="arch-component" data-info="Type-safe ORM generating optimized SQL queries.">Prisma</div>
+                                <div class="arch-component" data-info="Primary relational database ensuring ACID transactions for Escrow.">PostgreSQL</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Escrow Hero -->
+                <section id="escrow" class="content-section hero-section">
+                    <div class="section-header">
+                        <h2>Escrow <span class="gradient-text">Engine</span></h2>
+                        <p class="section-subtitle">A secure financial flow protecting both Clients and Students.</p>
+                    </div>
+                    
+                    <div class="escrow-split">
+                        <div class="escrow-visualizer glass-panel">
+                            <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 24px;">Interactive Payment Flow</h3>
+                            <div class="escrow-animation-area" id="escrow-canvas">
+                                <div id="e-client" class="e-wallet" style="left:5%;">
+                                    <div class="wallet-icon-bg"><i class="fa-solid fa-building"></i></div>
+                                    <span>Client</span>
+                                    <div class="wallet-balance" id="client-bal">₹50,000</div>
+                                </div>
+                                <div id="e-escrow" class="e-wallet" style="left:50%; transform:translateX(-50%); border-style:dashed; border-color:#0f7b6c; color:#0f7b6c; background:#e1f3ed; z-index:1;">
+                                    <div class="wallet-icon-bg" style="background: rgba(15, 123, 108, 0.1);"><i class="fa-solid fa-lock-open" id="escrow-lock-icon"></i></div>
+                                    <span>ESCROW HOLD</span>
+                                    <div class="wallet-balance" id="escrow-bal">₹0</div>
+                                </div>
+                                <div id="e-student" class="e-wallet" style="right:5%;">
+                                    <div class="wallet-icon-bg"><i class="fa-solid fa-user-graduate"></i></div>
+                                    <span>Student</span>
+                                    <div class="wallet-balance" id="student-bal">₹0</div>
+                                </div>
+                                <div id="e-coin" class="e-coin"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                                
+                                <!-- Timeline progression -->
+                                <div class="escrow-timeline">
+                                    <div class="et-step active" id="et-1">Assigned</div>
+                                    <div class="et-line"></div>
+                                    <div class="et-step" id="et-2">Funded</div>
+                                    <div class="et-line"></div>
+                                    <div class="et-step" id="et-3">Submitted</div>
+                                    <div class="et-line"></div>
+                                    <div class="et-step" id="et-4">Approved</div>
+                                    <div class="et-line"></div>
+                                    <div class="et-step" id="et-5">Released</div>
+                                </div>
+
+                                <div class="e-msg" id="e-msg">Contract Created. Awaiting Client Funding.</div>
+                            </div>
+                            <div class="escrow-controls">
+                                <button class="glass-btn" id="btn-escrow-fund"><i class="fa-solid fa-money-bill-transfer"></i> Fund Project</button>
+                                <button class="glass-btn" id="btn-escrow-work" disabled><i class="fa-solid fa-file-arrow-up"></i> Submit Work</button>
+                                <button class="glass-btn" id="btn-escrow-release" disabled><i class="fa-solid fa-check-double"></i> Approve & Release</button>
+                                <button class="glass-btn dispute-btn" id="btn-escrow-dispute" disabled><i class="fa-solid fa-triangle-exclamation"></i> Dispute</button>
+                                <button class="glass-btn" id="btn-escrow-refund" disabled><i class="fa-solid fa-rotate-left"></i> Refund Client</button>
+                                <button class="glass-btn" id="btn-escrow-reset" style="margin-left:auto;"><i class="fa-solid fa-rotate"></i> Reset Flow</button>
+                            </div>
+                        </div>
+
+                        <div class="escrow-why glass-panel">
+                            <h3>Why Escrow Matters</h3>
+                            <div class="why-comparison">
+                                <div class="why-bad">
+                                    <h4 class="text-red"><i class="fa-solid fa-xmark"></i> Without Escrow</h4>
+                                    <ul>
+                                        <li><strong>Client Risk:</strong> Pays upfront, student disappears.</li>
+                                        <li><strong>Student Risk:</strong> Works for weeks, client refuses to pay.</li>
+                                        <li><strong>Result:</strong> Zero trust, high friction.</li>
+                                    </ul>
+                                </div>
+                                <div class="why-good">
+                                    <h4 class="text-green"><i class="fa-solid fa-check"></i> With Escrow</h4>
+                                    <ul>
+                                        <li><strong>Funds Locked:</strong> Money is secured before work begins.</li>
+                                        <li><strong>Trust Increased:</strong> Student is guaranteed payment upon approval.</li>
+                                        <li><strong>Disputes Managed:</strong> Admin resolves deadlocks.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recommendation Hero -->
+                <section id="recommendations" class="content-section hero-section">
+                    <div class="section-header">
+                        <h2>How <span class="gradient-text">Recommendations</span> Work</h2>
+                        <p class="section-subtitle">How Talent Mesh intelligently pairs the right student with the right project in seconds.</p>
+                    </div>
+                    
+                    <div class="rec-flows" style="display:flex; gap:24px; margin-bottom: 40px;">
+                        <div class="rec-flow-card glass-panel" style="flex:1; text-align:center;">
+                            <h4 style="margin-bottom: 20px; font-weight:800; color:var(--primary);">For Students: Finding Work</h4>
+                            <div class="rf-step">Student Profile</div>
+                            <div class="rf-arrow">↓</div>
+                            <div class="rf-step">System Analyses Profile</div>
+                            <div class="rf-arrow">↓</div>
+                            <div class="rf-step">Multiple Factors Evaluated</div>
+                            <div class="rf-arrow">↓</div>
+                            <div class="rf-step">Recommendation Score Generated</div>
+                            <div class="rf-arrow">↓</div>
+                            <div class="rf-step highlight" style="background:#e1f3ed; color:#0f7b6c; border-color:#0f7b6c;">Best Matching Projects Displayed</div>
+                        </div>
+                        <div class="rec-flow-card glass-panel" style="flex:1; text-align:center;">
+                            <h4 style="margin-bottom: 20px; font-weight:800; color:var(--primary);">For Clients: Finding Talent</h4>
+                            <div class="rf-step">Project Requirements</div>
+                            <div class="rf-arrow">↓</div>
+                            <div class="rf-step">System Analyses Requirements</div>
+                            <div class="rf-arrow">↓</div>
+                            <div class="rf-step">Student Profiles Evaluated</div>
+                            <div class="rf-arrow">↓</div>
+                            <div class="rf-step">Matching Score Generated</div>
+                            <div class="rf-arrow">↓</div>
+                            <div class="rf-step highlight" style="background:#e1f3ed; color:#0f7b6c; border-color:#0f7b6c;">Best Students Recommended</div>
+                        </div>
+                    </div>
+
+                    <div class="rec-hero-container glass-panel">
+                        <div class="rec-inputs">
+                            <div style="margin-bottom: 30px;">
+                                <h3 style="font-size: 22px; font-weight: 800;">Interactive Demo: Match a Student to a Project</h3>
+                                <p style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;">Move the sliders to see how the system calculates the final match score based on actual platform metrics.</p>
+                            </div>
+
+                            <div class="slider-group">
+                                <label>Skills Match (Overlapping skills with project)</label>
+                                <input type="range" id="rec-skill" min="0" max="100" value="85">
+                                <span class="val">85%</span>
+                            </div>
+                            <div class="slider-group">
+                                <label>Past Ratings (Previous client reviews)</label>
+                                <input type="range" id="rec-rep" min="0" max="100" value="90">
+                                <span class="val">90%</span>
+                            </div>
+                            <div class="slider-group">
+                                <label>Experience Level (Matches project difficulty)</label>
+                                <input type="range" id="rec-diff" min="0" max="100" value="70">
+                                <span class="val">70%</span>
+                            </div>
+                            <div class="slider-group" style="margin-top: 30px;">
+                                <label>Platform Activity & Verification</label>
+                                <select id="rec-tier" class="glass-select" style="font-size: 15px; padding: 12px;">
+                                    <option value="0">Unverified Profile</option>
+                                    <option value="0.05">Active Student</option>
+                                    <option value="0.10">Top Performer</option>
+                                    <option value="0.15" selected>College Verified Elite</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="rec-visuals" style="width: 450px;">
+                            <div class="rec-live-score" style="flex-direction: row; gap:20px; align-items:center; padding: 24px;">
+                                <div class="score-ring" style="width: 100px; height: 100px; margin:0;">
+                                    <svg viewBox="0 0 100 100">
+                                        <circle class="bg" cx="50" cy="50" r="45" />
+                                        <circle class="progress" id="rec-progress" cx="50" cy="50" r="45" />
+                                    </svg>
+                                    <div class="score-val" id="rec-score-text" style="font-size:28px;">0</div>
+                                </div>
+                                <div>
+                                    <h4 style="font-size: 13px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Final Recommendation Score</h4>
+                                    <div id="rec-status" style="font-weight: 800; font-size: 22px;">Excellent Match</div>
+                                </div>
+                            </div>
+                            
+                            <div class="rec-why-panel" id="rec-why-panel">
+                                <h4 style="font-size: 16px; margin-bottom: 16px; font-weight: 800;">Score Breakdown</h4>
+                                <div class="breakdown-bar">
+                                    <div class="bb-label">Skills Match</div>
+                                    <div class="bb-track"><div class="bb-fill" id="bb-skill" style="background:#2383e2;"></div></div>
+                                </div>
+                                <div class="breakdown-bar">
+                                    <div class="bb-label">Ratings</div>
+                                    <div class="bb-track"><div class="bb-fill" id="bb-rep" style="background:#0f7b6c;"></div></div>
+                                </div>
+                                <div class="breakdown-bar">
+                                    <div class="bb-label">Experience</div>
+                                    <div class="bb-track"><div class="bb-fill" id="bb-diff" style="background:#d9730d;"></div></div>
+                                </div>
+                                <div class="breakdown-bar">
+                                    <div class="bb-label">Verification</div>
+                                    <div class="bb-track"><div class="bb-fill" id="bb-tier" style="background:#9065b0;"></div></div>
+                                </div>
+                                
+                                <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                                    <h4 style="font-size: 14px; margin-bottom: 12px; font-weight: 800; color: var(--text-primary);">Why this student was recommended:</h4>
+                                    <div class="why-text" id="why-text" style="font-size: 14px; color: var(--text-secondary); line-height: 1.8;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tech-deepdive glass-panel" style="margin-top: 40px;">
+                        <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Under the Hood: Technical Implementation</h3>
+                        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 28px;">These are the actual algorithms powering the recommendation system — not simulated or assumed.</p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+
+                            <!-- K-Means Cluster Visual -->
+                            <div class="td-card" style="padding: 24px; background: #fff; border: 1px solid var(--border-color); border-radius: 8px;">
+                                <h4 style="color: var(--primary); margin-bottom: 4px;"><i class="fa-solid fa-brain"></i> K-Means Clustering (ML, K=4)</h4>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5;">An unsupervised ML algorithm groups all students into 4 tiers based on 6 platform metrics. The <strong>active tier</strong> (highlighted) changes live as you adjust the verification dropdown above.</p>
+                                <div class="km-visual">
+                                    <div class="km-cluster" id="km-tier-0" style="--km-color:#787774;">
+                                        <div class="km-dot"></div>
+                                        <div class="km-info">
+                                            <strong>Beginner</strong>
+                                            <span>New &amp; learning, lower scores</span>
+                                        </div>
+                                    </div>
+                                    <div class="km-cluster" id="km-tier-1" style="--km-color:#0f7b6c;">
+                                        <div class="km-dot"></div>
+                                        <div class="km-info">
+                                            <strong>Rising Talent</strong>
+                                            <span>Growing track record, +5% bonus</span>
+                                        </div>
+                                    </div>
+                                    <div class="km-cluster" id="km-tier-2" style="--km-color:#2383e2;">
+                                        <div class="km-dot"></div>
+                                        <div class="km-info">
+                                            <strong>Professional</strong>
+                                            <span>Consistent delivery, +10% bonus</span>
+                                        </div>
+                                    </div>
+                                    <div class="km-cluster" id="km-tier-3" style="--km-color:#9065b0;">
+                                        <div class="km-dot"></div>
+                                        <div class="km-info">
+                                            <strong>College Elite</strong>
+                                            <span>Top performers, +15% bonus</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 16px; padding: 12px; background: var(--bg-sidebar); border-radius: 6px;">
+                                    <p style="font-size: 12px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">6 Features Extracted per Student</p>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                        <span class="kf-tag"><i class="fa-solid fa-check-circle"></i> Completion Rate</span>
+                                        <span class="kf-tag"><i class="fa-solid fa-clock"></i> On-Time Delivery</span>
+                                        <span class="kf-tag"><i class="fa-solid fa-wallet"></i> Total Earnings</span>
+                                        <span class="kf-tag"><i class="fa-solid fa-list-check"></i> Projects Completed</span>
+                                        <span class="kf-tag"><i class="fa-solid fa-star"></i> Avg Client Rating</span>
+                                        <span class="kf-tag"><i class="fa-solid fa-award"></i> Reputation Score</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right column: 2 cards -->
+                            <div style="display: flex; flex-direction: column; gap: 24px;">
+                                <div class="td-card" style="padding: 24px; background: #fff; border: 1px solid var(--border-color); border-radius: 8px;">
+                                    <h4 style="color: #0f7b6c; margin-bottom: 8px;"><i class="fa-solid fa-calculator"></i> Jaccard Similarity Index</h4>
+                                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">The Skills Match score is not a simple percentage. The backend computes the exact <strong>Jaccard Index</strong> — the number of matching skills divided by the total unique skills across both the student and the project.</p>
+                                    <div style="margin-top: 16px; background: var(--bg-sidebar); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 13px; color: var(--primary); text-align:center;">Score = |A ∩ B| / |A ∪ B|</div>
+                                </div>
+                                <div class="td-card" style="padding: 24px; background: #fff; border: 1px solid var(--border-color); border-radius: 8px;">
+                                    <h4 style="color: #d9730d; margin-bottom: 8px;"><i class="fa-solid fa-gears"></i> BullMQ Async Processing</h4>
+                                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Calculating scores for thousands of student-project pairs is heavy work. The system offloads this to background workers via <strong>BullMQ + Redis queues</strong> — keeping the API fast and responsive while scores are computed asynchronously.</p>
+                                    <div style="margin-top: 14px; display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 600; color: var(--text-secondary);"><i class="fa-solid fa-arrow-right" style="color:#d9730d"></i> Profile updates &nbsp;<i class="fa-solid fa-arrow-right" style="color:#d9730d"></i>&nbsp; Job queued &nbsp;<i class="fa-solid fa-arrow-right" style="color:#d9730d"></i>&nbsp; Scores updated silently</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Messaging Deep Dive -->
+                <section id="messaging" class="content-section hero-section">
+                    <div class="section-header">
+                        <h2>Real-time <span class="gradient-text">Messaging</span></h2>
+                        <p class="section-subtitle">Visual sequence of how Socket.IO, Redis, and NestJS orchestrate instant communication.</p>
+                    </div>
+                    <div class="msg-deepdive glass-panel">
+                        <div class="msg-diagram" style="text-align: center; width: 100%;">
+                            <div class="mermaid">
+                            sequenceDiagram
+                                participant Student (Browser)
+                                participant NestJS Gateway (Socket.IO)
+                                participant Redis Pub/Sub
+                                participant PostgreSQL
+                                participant Client (Browser)
+                                
+                                Student (Browser)->>NestJS Gateway (Socket.IO): Connect (JWT Auth)
+                                NestJS Gateway (Socket.IO)->>NestJS Gateway (Socket.IO): AuthGuard Validates Token
+                                NestJS Gateway (Socket.IO)->>Redis Pub/Sub: Register User Presence (Online)
+                                Student (Browser)->>NestJS Gateway (Socket.IO): emit("typing", contractId)
+                                NestJS Gateway (Socket.IO)->>Client (Browser): emit("userTyping")
+                                Student (Browser)->>NestJS Gateway (Socket.IO): emit("sendMessage", data)
+                                NestJS Gateway (Socket.IO)->>PostgreSQL: Save Message Transactionally
+                                NestJS Gateway (Socket.IO)->>Redis Pub/Sub: Publish message to cluster
+                                Redis Pub/Sub->>NestJS Gateway (Socket.IO): Broadcast to Contract Room
+                                NestJS Gateway (Socket.IO)->>Client (Browser): emit("newMessage", payload)
+                                Client (Browser)->>NestJS Gateway (Socket.IO): emit("messageRead", msgId)
+                                NestJS Gateway (Socket.IO)->>PostgreSQL: Update Read Receipt
+                            </div>
+                        </div>
+                        <div class="msg-explanation" style="margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px;">
+                            <div class="msg-feature">
+                                <i class="fa-solid fa-shield-halved text-blue" style="font-size:24px; margin-bottom:8px;"></i>
+                                <h4>Guarded Sockets</h4>
+                                <p>WebSockets are protected by standard JWT guards preventing unauthorized connections.</p>
+                            </div>
+                            <div class="msg-feature">
+                                <i class="fa-solid fa-keyboard text-purple" style="font-size:24px; margin-bottom:8px;"></i>
+                                <h4>Typing Indicators</h4>
+                                <p>Volatile events broadcast typing status to the room without database writes.</p>
+                            </div>
+                            <div class="msg-feature">
+                                <i class="fa-solid fa-server text-red" style="font-size:24px; margin-bottom:8px;"></i>
+                                <h4>Redis Pub/Sub</h4>
+                                <p>Ensures messages are delivered even if users are connected to different load-balanced servers.</p>
+                            </div>
+                            <div class="msg-feature">
+                                <i class="fa-solid fa-check-double text-green" style="font-size:24px; margin-bottom:8px;"></i>
+                                <h4>Read Receipts</h4>
+                                <p>Client emits read events, updating the database state and notifying the sender instantly.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Database Models -->
+                <section id="database" class="content-section">
+                    <div class="section-header">
+                        <h2>Database <span class="gradient-text">Design</span></h2>
+                        <p class="section-subtitle">The 31+ tables of Talent Mesh, grouped into modular architectures.</p>
+                    </div>
+                    <div class="db-visuals">
+                        <div class="db-modules-grid" id="db-modules-grid"></div>
+                        <div class="db-er-static glass-panel">
+                            <h3>Simplified ER Overview</h3>
+                            <div class="mermaid" id="er-mermaid">
+                            erDiagram
+                                USER ||--o{ STUDENT : is
+                                USER ||--o{ CLIENT : is
+                                CLIENT ||--o{ PROJECT : creates
+                                STUDENT ||--o{ APPLICATION : submits
+                                PROJECT ||--o{ APPLICATION : receives
+                                APPLICATION ||--|| CONTRACT : becomes
+                                CONTRACT ||--|| ESCROW : funded_by
+                                ESCROW ||--|| TRANSACTION : logs
+                                CONTRACT ||--o{ REVIEW : gets
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tech Stack -->
+                <section id="tech-stack" class="content-section">
+                    <div class="section-header">
+                        <h2>Tech <span class="gradient-text">Stack</span></h2>
+                        <p class="section-subtitle">The complete technology stack mapped to specific use cases.</p>
+                    </div>
+                    <div class="tech-cards-grid" id="tech-cards-grid"></div>
+                </section>
+
+                <!-- Roles -->
+                <section id="roles" class="content-section">
+                    <div class="section-header">
+                        <h2>User <span class="gradient-text">Workflows</span></h2>
+                        <p class="section-subtitle">The core actors and their specific journeys through the platform.</p>
+                    </div>
+                    <div class="roles-journeys-list" id="roles-journeys-list"></div>
+                </section>
+
+                <!-- Project Journey -->
+                <section id="journey" class="content-section">
+                    <div class="section-header">
+                        <h2>Project <span class="gradient-text">Journey</span></h2>
+                        <p class="section-subtitle">Interactive step-by-step progress from application to final payment.</p>
+                    </div>
+                    <div class="journey-interactive glass-panel">
+                        <div class="journey-stepper" id="journey-stepper"></div>
+                        <div class="journey-step-details" id="journey-step-details">
+                            <h3 style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Select a step above</h3>
+                            <p style="color: var(--text-secondary);">Click on any step in the timeline to view the backend APIs, pages, and tables involved.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Lifecycle -->
+                <section id="lifecycle" class="content-section">
+                    <div class="section-header">
+                        <h2>Business <span class="gradient-text">Lifecycle</span></h2>
+                        <p class="section-subtitle">The marketplace states a project moves through.</p>
+                    </div>
+                    <div class="lifecycle-flow-wrapper glass-panel">
+                        <div class="lifecycle-flow" id="lifecycle-flow"></div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

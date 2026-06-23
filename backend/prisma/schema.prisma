@@ -1,0 +1,775 @@
+// This is your Prisma schema file
+// TalentMesh AI - Production PostgreSQL Database Design
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  CLIENT
+  RECRUITER
+  TPO
+  ADMIN
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+  APPLICATIONS_OPEN
+  APPLICATIONS_CLOSED
+  SHORTLISTED
+  ASSIGNED
+  ESCROW_PENDING
+  IN_PROGRESS
+  SUBMITTED
+  REVISION_REQUESTED
+  REVIEW
+  COMPLETED
+  RELEASED
+  DISPUTED
+  CANCELLED
+  ARCHIVED
+}
+
+enum ApplicationStatus {
+  APPLIED
+  PENDING
+  SHORTLISTED
+  REJECTED
+  ACCEPTED
+  WITHDRAWN
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  ESCROW_LOCK
+  ESCROW_RELEASE
+  REFUND
+  PLATFORM_FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_INVESTIGATION
+  RESOLVED
+  DISMISSED
+}
+
+enum NotificationType {
+  APPLICATION_RECEIVED
+  APPLICATION_ACCEPTED
+  APPLICATION_REJECTED
+  CONTRACT_CREATED
+  CONTRACT_FUNDED
+  SUBMISSION_RECEIVED
+  CONTRACT_APPROVED
+  CONTRACT_DISPUTED
+  PAYMENT_RELEASED
+  REVIEW_RECEIVED
+  LEADERBOARD_RANK_CHANGED
+  PROFILE_VIEWED
+  SYSTEM_ALERT
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  MANUAL_REVIEW
+}
+
+enum ClusterTier {
+  BEGINNER
+  RISING_TALENT
+  PROFESSIONAL
+  ELITE
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CORE USER MODELS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  role          Role
+  avatarUrl     String?
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Auth tokens
+  refreshToken       String?
+  passwordResetToken String?
+  resetTokenExpiry   DateTime?
+
+  // Profile Relations (one-to-one per role)
+  student   Student?
+  client    Client?
+  recruiter Recruiter?
+  tpo       TPO?
+  admin     Admin?
+
+  // Cross-role relations
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  wallet               Wallet?
+  conversations        ConversationParticipant[]
+  sentMessages         Message[]                 @relation("SentMessages")
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COLLEGE & DEPARTMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+model College {
+  id          String             @id @default(uuid())
+  name        String
+  address     String?
+  domain      String             @unique // e.g. "mit.edu" for auto-verification
+  city        String?
+  country     String             @default("India")
+  isVerified  Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  departments Department[]
+  students    Student[]
+  tpos        TPO[]
+
+  @@index([domain])
+  @@map("colleges")
+}
+
+model Department {
+  id        String    @id @default(uuid())
+  name      String
+  collegeId String
+  college   College   @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  students Student[]
+
+  @@unique([name, collegeId])
+  @@index([collegeId])
+  @@map("departments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROLE-SPECIFIC PROFILES
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Student {
+  id                String             @id @default(uuid())
+  userId            String             @unique
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collegeId         String
+  college           College            @relation(fields: [collegeId], references: [id])
+  departmentId      String?
+  department        Department?        @relation(fields: [departmentId], references: [id])
+
+  // Profile details
+  bio               String?
+  location          String?
+  yearOfStudy       Int?
+  major             String?
+  graduationYear    Int?
+
+  // External links
+  githubUrl         String?
+  linkedinUrl       String?
+  twitterUrl        String?
+  portfolioUrl      String?
+
+  // Reputation & stats (cached and updated by reputation engine)
+  reputationScore   Float              @default(0.0)  // 0–100
+  completionRate    Float              @default(0.0)  // 0–1.0
+  avgClientRating   Float              @default(0.0)  // 0–5.0
+  onTimeDeliveryRate Float             @default(0.0)  // 0–1.0
+  totalEarnings     Decimal            @default(0.0)
+  profileViews      Int                @default(0)
+  projectsCompleted Int                @default(0)
+
+  // Verification
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?
+  verifiedByTpoId    String?
+
+  clusterTier        ClusterTier        @default(BEGINNER)
+
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  // Relations
+  skills          StudentSkill[]
+  certifications  Certification[]
+  applications    ProjectApplication[]
+  contracts       Contract[]
+  resumes         Resume[]
+  recommendations Recommendation[]
+  leaderboard     Leaderboard?
+  reviews         Review[]           @relation("RevieweeStudent")
+
+  @@index([reputationScore(sort: Desc)])
+  @@index([collegeId])
+  @@index([departmentId])
+  @@index([verificationStatus])
+  @@map("students")
+}
+
+model Client {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String?
+  industry    String?
+  website     String?
+  isVerified  Boolean   @default(false)
+  avgRating   Float     @default(0.0) // 0-5.0
+  projectsCompleted Int @default(0)
+  totalSpent  Decimal   @default(0.0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  projects Project[]
+  reviews  Review[]  @relation("ReviewerClient")
+
+  @@map("clients")
+}
+
+model Recruiter {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  industry    String?
+  website     String?
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("recruiters")
+}
+
+model TPO {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collegeId   String
+  college     College  @relation(fields: [collegeId], references: [id])
+  designation String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([collegeId])
+  @@map("tpos")
+}
+
+model Admin {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissions String[] @default([]) // e.g. ["MANAGE_USERS", "RESOLVE_DISPUTES"]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SKILLS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Skill {
+  id        String         @id @default(uuid())
+  name      String         @unique
+  category  String?        // e.g. "Frontend", "Backend", "ML"
+  createdAt DateTime       @default(now())
+
+  students StudentSkill[]
+  projects ProjectSkill[]
+
+  @@index([name])
+  @@map("skills")
+}
+
+model StudentSkill {
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  skillId   String
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  level     String  @default("Intermediate")
+  endorsed  Int     @default(0)
+  addedAt   DateTime @default(now())
+
+  @@id([studentId, skillId])
+  @@index([skillId])
+  @@map("student_skills")
+}
+
+model Certification {
+  id          String   @id @default(uuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  name        String
+  issuer      String
+  issueDate   DateTime
+  credentialUrl String?
+  createdAt   DateTime @default(now())
+
+  @@index([studentId])
+  @@map("certifications")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROJECTS & APPLICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Project {
+  id                String          @id @default(uuid())
+  clientId          String
+  client            Client          @relation(fields: [clientId], references: [id])
+  title             String
+  description       String
+  budget            Decimal
+  timelineDays      Int
+  difficulty        DifficultyLevel
+  category          String
+  projectType       String          @default("One-time Project")
+  ndaRequired       Boolean         @default(false)
+  hideClientName    Boolean         @default(false)
+  communicationPref String          @default("Email")
+  status            ProjectStatus   @default(PUBLISHED)
+  applicationCount  Int             @default(0)
+  viewCount         Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  skills          ProjectSkill[]
+  applications    ProjectApplication[]
+  contracts       Contract[]
+  recommendations Recommendation[]
+
+  @@index([status])
+  @@index([budget])
+  @@index([difficulty])
+  @@index([category])
+  @@index([clientId])
+  @@map("projects")
+}
+
+model ProjectSkill {
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skillId   String
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, skillId])
+  @@map("project_skills")
+}
+
+model ProjectApplication {
+  id          String            @id @default(uuid())
+  projectId   String
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  coverLetter String?
+  proposedBudget Decimal?
+  status      ApplicationStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([projectId, studentId])
+  @@index([studentId])
+  @@index([projectId, status])
+  @@map("project_applications")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTRACTS & ESCROW (State Machine Core)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Contract {
+  id           String        @id @default(uuid())
+  projectId    String
+  project      Project       @relation(fields: [projectId], references: [id])
+  studentId    String
+  student      Student       @relation(fields: [studentId], references: [id])
+  agreedBudget Decimal
+  timelineDays Int
+  status       ProjectStatus @default(ASSIGNED)
+  startedAt    DateTime?
+  submittedAt  DateTime?
+  completedAt  DateTime?
+  dueAt        DateTime?     // Calculated deadline date
+
+  // On-time delivery tracking
+  wasOnTime Boolean?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  escrow      Escrow?
+  deliverables Deliverable[]
+  disputes    Dispute[]
+  reviews     Review[]
+
+  @@index([studentId])
+  @@index([projectId])
+  @@index([status])
+  @@map("contracts")
+}
+
+model Escrow {
+  id            String   @id @default(uuid())
+  contractId    String   @unique
+  contract      Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  amount        Decimal
+  platformFee   Decimal    @default(0.0) // e.g. 10% of amount
+  isFunded      Boolean  @default(false)
+  isReleased    Boolean  @default(false)
+  fundedAt      DateTime?
+  releasedAt    DateTime?
+  walletId      String   // Client's wallet
+  wallet        Wallet   @relation(fields: [walletId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("escrows")
+}
+
+model Deliverable {
+  id          String    @id @default(uuid())
+  contractId  String
+  contract    Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  submission  String    // Rich text or file URL
+  notes       String?
+  submittedAt DateTime  @default(now())
+  isAccepted  Boolean   @default(false)
+  feedback    String?
+  reviewedAt  DateTime?
+
+  @@index([contractId])
+  @@map("deliverables")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REVIEWS & RATINGS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Review {
+  id         String   @id @default(uuid())
+  contractId String
+  contract   Contract @relation(fields: [contractId], references: [id])
+
+  // The reviewer
+  reviewerId String
+  reviewerRole Role
+
+  // The reviewee
+  revieweeId     String
+  revieweeRole   Role
+
+  // For structured reviews from clients
+  studentId  String?
+  student    Student?  @relation("RevieweeStudent", fields: [studentId], references: [id])
+  clientId   String?
+  client     Client?   @relation("ReviewerClient", fields: [clientId], references: [id])
+
+  // Rating Categories (1.0 - 5.0)
+  communication Float?
+  quality       Float?
+  timeliness    Float?
+  professionalism Float?
+  technicalSkill Float?
+
+  rating     Float    // Overall average
+  feedback   String
+  isPublic   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([contractId, reviewerId])
+  @@index([revieweeId])
+  @@index([contractId])
+  @@map("reviews")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WALLET & TRANSACTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance   Decimal    @default(0.0)
+  lockedBalance Decimal @default(0.0) // Amount locked in escrow
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Payout Details
+  bankName      String?
+  accountNumber String?
+  routingNumber String?
+  upiId         String?
+  payoutMethod  String   @default("BANK_TRANSFER") // BANK_TRANSFER or UPI
+
+  transactions Transaction[]
+  escrows      Escrow[]
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id          String            @id @default(uuid())
+  walletId    String
+  wallet      Wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amount      Decimal
+  type        TransactionType
+  status      TransactionStatus @default(PENDING)
+  description String?
+  reference   String?           // External payment reference
+  metadata    Json?
+  createdAt   DateTime          @default(now())
+
+  @@index([walletId])
+  @@index([type])
+  @@index([status])
+  @@map("transactions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DISPUTES
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Dispute {
+  id           String        @id @default(uuid())
+  contractId   String
+  contract     Contract      @relation(fields: [contractId], references: [id])
+  filedById    String        // User ID filing the dispute
+  filedAgainst String        // User ID being disputed
+  reason       String
+  evidence     String?       // URL or text evidence
+  status       DisputeStatus @default(OPEN)
+  resolution   String?
+  resolvedById String?       // Admin who resolved it
+  createdAt    DateTime      @default(now())
+  resolvedAt   DateTime?
+
+  @@index([contractId])
+  @@index([status])
+  @@map("disputes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RECOMMENDATIONS (Engine Output Storage)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Recommendation {
+  id                String   @id @default(uuid())
+  studentId         String
+  student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  projectId         String
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  matchScore        Float    // 0–100: output of recommendation engine
+  skillMatchScore   Float    @default(0.0)
+  reputationScore   Float    @default(0.0)
+  difficultyScore   Float    @default(0.0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([studentId, projectId])
+  @@index([studentId, matchScore(sort: Desc)])
+  @@index([projectId, matchScore(sort: Desc)])
+  @@map("recommendations")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LEADERBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Leaderboard {
+  id             String   @id @default(uuid())
+  studentId      String   @unique
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  globalRank     Int      @default(0)
+  collegeRank    Int      @default(0)
+  departmentRank Int      @default(0)
+  score          Float    @default(0.0) // Composite rank score
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([globalRank])
+  @@index([collegeRank])
+  @@map("leaderboard")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SYSTEM METRICS & ML TRACKING
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SystemMetrics {
+  id                   String   @id @default(uuid())
+  lastClusterRunAt     DateTime @default(now())
+  totalBeginners       Int      @default(0)
+  totalRisingTalents   Int      @default(0)
+  totalProfessionals   Int      @default(0)
+  totalElites          Int      @default(0)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  actionUrl String?          // Deep link URL
+  metadata  Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESUMES
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Resume {
+  id           String   @id @default(uuid())
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  fileUrl      String
+  fileName     String
+  parsedText   String?  // Extracted text used by recommendation engine
+  isActive     Boolean  @default(true)
+  uploadedAt   DateTime @default(now())
+
+  @@index([studentId])
+  @@map("resumes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANALYTICS SNAPSHOTS (Cached aggregate data)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AnalyticsSnapshot {
+  id           String   @id @default(uuid())
+  key          String   @unique // e.g. "platform", "college:uuid", "student:uuid"
+  data         Json
+  calculatedAt DateTime @default(now())
+
+  @@index([key])
+  @@map("analytics_snapshots")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   // e.g. "CONTRACT_STATUS_CHANGED", "USER_BANNED"
+  resource  String?  // e.g. "Contract", "User"
+  resourceId String?
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt(sort: Desc)])
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MESSAGING
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Conversation {
+  id           String                    @id @default(uuid())
+  participants ConversationParticipant[]
+  messages     Message[]
+  lastMessage  String?
+  lastMessageAt DateTime?
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+
+  @@index([lastMessageAt(sort: Desc)])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unreadCount    Int          @default(0)
+  joinedAt       DateTime     @default(now())
+
+  @@id([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@index([senderId])
+  @@map("messages")
+}
+
+

@@ -1,0 +1,1 @@
+{"nodes":[{"id":"include_lz4frame","label":"lz4frame.h","file_type":"code","source_file":"E:\\Talent-Mesh\\services\\pgsql\\include\\lz4frame.h","source_location":"L1"}],"edges":[{"source":"include_lz4frame","target":"stddef","relation":"imports","confidence":"EXTRACTED","source_file":"E:\\Talent-Mesh\\services\\pgsql\\include\\lz4frame.h","source_location":"L53","weight":1}]}

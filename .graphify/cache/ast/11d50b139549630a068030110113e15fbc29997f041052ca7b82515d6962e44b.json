@@ -1,0 +1,1 @@
+{"nodes":[{"id":"openssl_ssl2","label":"ssl2.h","file_type":"code","source_file":"E:\\Talent-Mesh\\services\\pgsql\\include\\openssl\\ssl2.h","source_location":"L1"}],"edges":[{"source":"openssl_ssl2","target":"macros","relation":"imports","confidence":"EXTRACTED","source_file":"E:\\Talent-Mesh\\services\\pgsql\\include\\openssl\\ssl2.h","source_location":"L14","weight":1}]}
