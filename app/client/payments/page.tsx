@@ -10,7 +10,7 @@ import { Loader2, CreditCard, ArrowUpRight, ArrowDownLeft, Lock, Plus } from 'lu
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import useRazorpay from 'react-razorpay'
+import { useRazorpay } from 'react-razorpay'
 
 export default function ClientPaymentsPage() {
   const { user } = useRequireAuth()
@@ -20,7 +20,7 @@ export default function ClientPaymentsPage() {
   const [depositing, setDepositing] = useState(false)
   const [depositDialogOpen, setDepositDialogOpen] = useState(false)
   const [depositAmount, setDepositAmount] = useState('')
-  const [Razorpay] = useRazorpay()
+  const { Razorpay } = useRazorpay()
 
   const fetchWallet = () => {
     Promise.all([
