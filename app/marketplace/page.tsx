@@ -21,7 +21,7 @@ export default function MarketplacePage() {
     async function fetchProjects() {
       try {
         const data = await apiClient('/projects')
-        setProjects(Array.isArray(data) ? data : [])
+        setProjects(Array.isArray(data) ? data : Array.isArray(data?.projects) ? data.projects : [])
       } catch (err) {
         console.error('Failed to fetch projects', err)
       } finally {
