@@ -11,7 +11,6 @@ import { motion } from 'framer-motion'
 import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
 import Link from 'next/link'
-import Link from 'next/link'
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }
 const itemVariants = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }

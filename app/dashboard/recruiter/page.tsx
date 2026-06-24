@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Users, Target, Star, MapPin, Search, Loader2, BookOpen, Briefcase, X, Mail, Phone, Github, Linkedin, Globe } from 'lucide-react'
+import { Users, Target, Star, MapPin, Search, Loader2, BookOpen, Briefcase, X, Mail, Phone, Code2, Globe } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
@@ -278,8 +278,8 @@ export default function RecruiterDashboard() {
 
               {(viewingCandidate.githubUrl || viewingCandidate.linkedinUrl || viewingCandidate.portfolioUrl) && (
                 <div className="flex flex-wrap gap-3 text-sm">
-                  {viewingCandidate.githubUrl && <a href={viewingCandidate.githubUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-blue-400 hover:underline"><Github className="w-4 h-4" /> GitHub</a>}
-                  {viewingCandidate.linkedinUrl && <a href={viewingCandidate.linkedinUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-blue-400 hover:underline"><Linkedin className="w-4 h-4" /> LinkedIn</a>}
+                  {viewingCandidate.githubUrl && <a href={viewingCandidate.githubUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-blue-400 hover:underline"><Code2 className="w-4 h-4" /> GitHub</a>}
+                  {viewingCandidate.linkedinUrl && <a href={viewingCandidate.linkedinUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-blue-400 hover:underline"><Briefcase className="w-4 h-4" /> LinkedIn</a>}
                   {viewingCandidate.portfolioUrl && <a href={viewingCandidate.portfolioUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-blue-400 hover:underline"><Globe className="w-4 h-4" /> Portfolio</a>}
                 </div>
               )}
