@@ -94,9 +94,6 @@ export default function LoginPage() {
                   <label htmlFor="password" className="block text-xs font-medium text-foreground/70 uppercase tracking-wider">
                     Password
                   </label>
-                  <Link href="/forgot-password" className="text-xs text-foreground/50 hover:text-foreground transition-colors">
-                    Forgot?
-                  </Link>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-foreground/40" />

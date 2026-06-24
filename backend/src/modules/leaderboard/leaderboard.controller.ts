@@ -25,7 +25,7 @@ export class LeaderboardController {
     @Query('page') page = 1,
     @Query('limit') limit = 20,
   ) {
-    return this.leaderboardService.getGlobalLeaderboard(page, limit);
+    return this.leaderboardService.getGlobalLeaderboard(Number(page), Number(limit));
   }
 
   @Public()
@@ -36,7 +36,7 @@ export class LeaderboardController {
     @Query('page') page = 1,
     @Query('limit') limit = 20,
   ) {
-    return this.leaderboardService.getCollegeLeaderboard(collegeId, page, limit);
+    return this.leaderboardService.getCollegeLeaderboard(collegeId, Number(page), Number(limit));
   }
 
   @Public()

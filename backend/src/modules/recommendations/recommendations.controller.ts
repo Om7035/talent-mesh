@@ -26,7 +26,7 @@ export class RecommendationsController {
   ) {
     const student = await this.prisma.student.findUnique({ where: { userId: user.sub } });
     if (!student) return [];
-    return this.recommendationEngine.getForStudent(student.id, limit);
+    return this.recommendationEngine.getForStudent(student.id, Number(limit));
   }
 
   @Get('project/:projectId/candidates')
@@ -37,6 +37,6 @@ export class RecommendationsController {
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Query('limit') limit = 10,
   ) {
-    return this.recommendationEngine.getForProject(projectId, limit);
+    return this.recommendationEngine.getForProject(projectId, Number(limit));
   }
 }
