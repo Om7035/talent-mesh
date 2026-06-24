@@ -427,7 +427,7 @@ export class ContractsService {
           action: 'CONTRACT_RELEASED',
           resource: 'Contract',
           resourceId: contractId,
-          metadata: { amount: escrow.amount, wasOnTime },
+          metadata: { amount: Number(escrow.amount), wasOnTime },
         },
       });
 
@@ -441,7 +441,7 @@ export class ContractsService {
         userId: contract.student.userId,
         type: 'PAYMENT_RELEASED',
         title: '💰 Payment Released!',
-        message: `$${escrow.amount.toFixed(2)} has been credited to your wallet for "${contract.project.title}".`,
+        message: `₹${Number(escrow.amount).toFixed(2)} has been credited to your wallet for "${contract.project.title}".`,
         actionUrl: `/student/wallet`,
       });
 
