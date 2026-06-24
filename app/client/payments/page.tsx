@@ -20,6 +20,7 @@ export default function ClientPaymentsPage() {
   const [depositing, setDepositing] = useState(false)
   const [depositDialogOpen, setDepositDialogOpen] = useState(false)
   const [depositAmount, setDepositAmount] = useState('')
+  const [simulating, setSimulating] = useState(false)
   const { Razorpay } = useRazorpay()
 
   const fetchWallet = () => {
@@ -105,6 +106,27 @@ export default function ClientPaymentsPage() {
     } finally {
       setDepositing(false)
       setDepositDialogOpen(false)
+    }
+  }
+
+  const handleSimulateDeposit = async () => {
+    const amount = Number(depositAmount)
+    if (!amount || isNaN(amount) || amount <= 0) return
+
+    try {
+      setSimulating(true)
+      await apiClient('/wallet/simulate-deposit', {
+        method: 'POST',
+        body: JSON.stringify({ amount })
+      })
+      toast.success('Test funds added successfully!')
+      setDepositDialogOpen(false)
+      setDepositAmount('')
+      fetchWallet()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to simulate deposit')
+    } finally {
+      setSimulating(false)
     }
   }
 
@@ -216,11 +238,15 @@ export default function ClientPaymentsPage() {
                 autoFocus
               />
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDepositDialogOpen(false)} disabled={depositing}>Cancel</Button>
-              <Button onClick={handleDeposit} disabled={depositing || !depositAmount} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+            <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+              <Button variant="outline" onClick={() => setDepositDialogOpen(false)} disabled={depositing || simulating} className="sm:mr-auto">Cancel</Button>
+              <Button onClick={handleSimulateDeposit} disabled={depositing || simulating || !depositAmount} variant="secondary" className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/20">
+                {simulating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Simulate (Test)
+              </Button>
+              <Button onClick={handleDeposit} disabled={depositing || simulating || !depositAmount} className="bg-emerald-600 hover:bg-emerald-500 text-white">
                 {depositing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Deposit
+                Pay via Razorpay
               </Button>
             </DialogFooter>
           </DialogContent>
