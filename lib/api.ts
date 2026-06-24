@@ -31,7 +31,43 @@ export const removeToken = () => {
   }
 }
 
-export const apiClient = async (endpoint: string, options: RequestInit = {}) => {
+// Dedupe concurrent refresh attempts — if multiple requests 401 at once
+// (e.g. several widgets fetching on page load), only refresh the token once.
+let refreshPromise: Promise<string | null> | null = null
+
+const refreshAccessToken = async (): Promise<string | null> => {
+  if (typeof window === 'undefined') return null
+  const refreshToken = localStorage.getItem('talentMesh_refreshToken')
+  if (!refreshToken) return null
+
+  if (!refreshPromise) {
+    refreshPromise = fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    })
+      .then(async (res) => {
+        if (!res.ok) return null
+        const json = await res.json().catch(() => null)
+        const data = json?.data ?? json
+        if (!data?.accessToken) return null
+        localStorage.setItem('talentMesh_accessToken', data.accessToken)
+        if (data.refreshToken) {
+          localStorage.setItem('talentMesh_refreshToken', data.refreshToken)
+        }
+        document.cookie = `tm_auth=1; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+        return data.accessToken as string
+      })
+      .catch(() => null)
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+
+  return refreshPromise
+}
+
+export const apiClient = async (endpoint: string, options: RequestInit = {}, _isRetry = false): Promise<any> => {
   const token = getToken()
 
   const headers: Record<string, string> = {
@@ -44,6 +80,16 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
     ...options,
     headers,
   })
+
+  // Access token expired — try a silent refresh once, then retry the original request.
+  // Skip this for the refresh/login/signup endpoints themselves to avoid loops.
+  if (response.status === 401 && !_isRetry && !endpoint.startsWith('/auth/')) {
+    const newToken = await refreshAccessToken()
+    if (newToken) {
+      return apiClient(endpoint, options, true)
+    }
+    removeToken()
+  }
 
   const json = await response.json().catch(() => null)
 
