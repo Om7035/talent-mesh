@@ -192,7 +192,7 @@ export class ApplicationsService {
       where: { studentId: student.id },
       include: {
         project: {
-          select: { title: true, status: true, difficulty: true, budget: true },
+          select: { id: true, title: true, status: true, difficulty: true, budget: true },
         },
       },
       orderBy: { createdAt: 'desc' },

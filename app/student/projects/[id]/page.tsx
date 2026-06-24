@@ -96,7 +96,7 @@ export default function StudentProjectDetailsPage({ params }: { params: { id: st
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin" /></div>
         ) : !project && !contract ? (
-           <div>Project data not available. (You need to implement the backend GET endpoint for this page)</div>
+           <div className="text-center py-12 text-foreground/60">Project not found.</div>
         ) : (
           <>
             <div>

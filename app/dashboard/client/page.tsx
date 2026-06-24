@@ -5,7 +5,6 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Briefcase, Users, IndianRupee, Clock, Eye, CheckCircle, Plus, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useRequireAuth } from '@/lib/auth-context'
@@ -63,15 +62,6 @@ export default function ClientDashboard() {
   const activeProjectsCount = analytics?.overview?.projectsActive || 0
   const totalSpent = analytics?.overview?.totalSpent || 0
   const completionRate = analytics?.overview?.hiringRate || 0
-  
-  // Fake chart data based on real stats for visual effect
-  const chartData = [
-    { month: 'Jan', spent: totalSpent * 0.1, projects: 1 },
-    { month: 'Feb', spent: totalSpent * 0.2, projects: 1 },
-    { month: 'Mar', spent: totalSpent * 0.3, projects: 2 },
-    { month: 'Apr', spent: totalSpent * 0.15, projects: 1 },
-    { month: 'May', spent: totalSpent * 0.25, projects: Math.max(1, activeProjectsCount) },
-  ]
 
   return (
     <DashboardLayout role="client">
@@ -191,49 +181,6 @@ export default function ClientDashboard() {
             </CardContent>
           </Card>
         </motion.div>
-
-        {/* Charts */}
-        {projects.length > 0 && (
-          <motion.div variants={containerVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <motion.div variants={itemVariants}>
-              <Card glass>
-                <CardHeader>
-                  <CardTitle>Spending Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" fontSize={12} />
-                      <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} />
-                      <Tooltip contentStyle={{ backgroundColor: '#000', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
-                      <Line type="monotone" dataKey="spent" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <Card glass>
-                <CardHeader>
-                  <CardTitle>Projects by Month</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" fontSize={12} />
-                      <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} />
-                      <Tooltip contentStyle={{ backgroundColor: '#000', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
-                      <Bar dataKey="projects" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </motion.div>
-        )}
 
       </motion.div>
     </DashboardLayout>

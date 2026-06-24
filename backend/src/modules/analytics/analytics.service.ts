@@ -123,7 +123,8 @@ export class AnalyticsService {
     const wallet = await this.prisma.wallet.findUnique({ where: { userId: clientUserId } });
 
     const projectsPosted = client.projects.length;
-    const projectsActive = client.projects.filter(p => p.status === 'ASSIGNED' || p.status === 'IN_PROGRESS').length;
+    const inactiveStatuses = ['DRAFT', 'COMPLETED', 'CANCELLED', 'RELEASED'];
+    const projectsActive = client.projects.filter(p => !inactiveStatuses.includes(p.status)).length;
     const projectsCompleted = client.projects.filter(p => p.status === 'COMPLETED').length;
     const projectsCancelled = client.projects.filter(p => p.status === 'CANCELLED').length;
     

@@ -6,6 +6,7 @@ import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
 import { useEffect, useState } from 'react'
 import { Loader2, Briefcase } from 'lucide-react'
+import Link from 'next/link'
 
 export default function StudentProjects() {
   const { user } = useRequireAuth()
@@ -43,7 +44,8 @@ export default function StudentProjects() {
         ) : (
           <div className="grid gap-4">
             {applications.map(app => (
-              <Card glass key={app.id}>
+              <Link href={app.project?.id ? `/student/projects/${app.project.id}` : '#'} key={app.id} className={!app.project?.id ? 'pointer-events-none' : ''}>
+              <Card glass className="hover:bg-white/5 transition-colors cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -61,6 +63,7 @@ export default function StudentProjects() {
                   )}
                 </CardContent>
               </Card>
+              </Link>
             ))}
           </div>
         )}
