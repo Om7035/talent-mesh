@@ -164,6 +164,29 @@ export class ProjectsService {
     return this.sanitizeProject(project);
   }
 
+  async getTpoRecommendations(projectId: string, clientUserId: string) {
+    const client = await this.prisma.client.findUnique({ where: { userId: clientUserId } });
+    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    if (!client || !project || project.clientId !== client.id) {
+      throw new ForbiddenException('Only the project owner can view TPO recommendations.');
+    }
+
+    return this.prisma.tpoRecommendation.findMany({
+      where: { projectId },
+      include: {
+        student: {
+          include: {
+            user: { select: { name: true, avatarUrl: true } },
+            college: { select: { name: true } },
+            skills: { include: { skill: true } },
+          },
+        },
+        tpo: { include: { user: { select: { name: true } } } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   // ─────────────────────────────────────────────────────────────────
   // UPDATE
   // ─────────────────────────────────────────────────────────────────

@@ -50,6 +50,28 @@ export class AdminController {
     return this.adminService.banUser(user.sub, id, reason);
   }
 
+  @Post('users/:id/unban')
+  @ApiOperation({ summary: 'Reverse a ban [ADMIN]' })
+  unbanUser(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+    return this.adminService.unbanUser(user.sub, id);
+  }
+
+  @Post('users/:id/shadow-ban')
+  @ApiOperation({ summary: 'Restrict visibility of a STUDENT or RECRUITER [ADMIN]' })
+  shadowBanUser(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('reason') reason: string,
+  ) {
+    return this.adminService.shadowBanUser(user.sub, id, reason);
+  }
+
+  @Post('users/:id/shadow-unban')
+  @ApiOperation({ summary: 'Lift a visibility restriction [ADMIN]' })
+  shadowUnbanUser(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+    return this.adminService.shadowUnbanUser(user.sub, id);
+  }
+
   @Post('users')
   @ApiOperation({ summary: 'Create a new user [ADMIN]' })
   createUser(

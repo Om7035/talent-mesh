@@ -5,9 +5,15 @@ import { PrismaService } from '../../database/prisma.service';
 export class RecruitersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async discoverTalent(query: any) {
+  async discoverTalent(recruiterUserId: string, query: any) {
+    const recruiter = await this.prisma.recruiter.findUnique({ where: { userId: recruiterUserId } });
+    // A shadow-banned recruiter sees an empty marketplace — they are never told why.
+    if (recruiter?.isShadowBanned) {
+      return { students: [], total: 0, page: 1, limit: 20, totalPages: 0 };
+    }
+
     const { skills, collegeId, minReputation, page = 1, limit = 20 } = query;
-    const where: any = { isActive: true, verificationStatus: 'VERIFIED' };
+    const where: any = { isActive: true, verificationStatus: 'VERIFIED', isShadowBanned: false };
 
     if (collegeId) where.collegeId = collegeId;
     if (minReputation) where.reputationScore = { gte: minReputation };
@@ -23,7 +29,7 @@ export class RecruitersService {
           college: { select: { name: true } },
           skills: { include: { skill: true } }
         },
-        orderBy: { reputationScore: 'desc' },
+        orderBy: [{ tpoRecommended: 'desc' }, { reputationScore: 'desc' }],
         skip: (page - 1) * limit,
         take: limit
       }),

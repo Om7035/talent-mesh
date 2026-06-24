@@ -130,7 +130,7 @@ export default function StudentDashboard() {
           <motion.div variants={itemVariants}>
             <StatCard
               title="Total Earnings"
-              value={loading ? '—' : `$${(profile?.totalEarnings || 0).toLocaleString()}`}
+              value={loading ? '—' : `₹${(profile?.totalEarnings || 0).toLocaleString()}`}
               description="Lifetime"
               icon={<IndianRupee className="w-5 h-5" />}
             />

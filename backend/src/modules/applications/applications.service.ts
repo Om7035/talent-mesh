@@ -94,7 +94,7 @@ export class ApplicationsService {
     }
 
     return this.prisma.projectApplication.findMany({
-      where: { projectId },
+      where: { projectId, student: { isShadowBanned: false } },
       include: {
         student: {
           include: {

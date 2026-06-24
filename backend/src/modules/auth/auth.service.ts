@@ -89,6 +89,7 @@ export class AuthService {
               collegeId: collegeId,
               departmentId: dto.departmentId ?? null,
               yearOfStudy: dto.yearOfStudy ?? null,
+              phone: dto.phone ?? null,
               verificationStatus,
             },
           });

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
 import { useEffect, useState } from 'react'
-import { Loader2, Users, Search, Edit2, Trash2, UserPlus, Shield, Ban, CheckCircle2 } from 'lucide-react'
+import { Loader2, Users, Search, Edit2, Trash2, UserPlus, Shield, Ban, CheckCircle2, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function AdminUsersDashboard() {
@@ -25,6 +25,11 @@ export default function AdminUsersDashboard() {
   // Forms state
   const [formData, setFormData] = useState({ name: '', email: '', role: 'STUDENT', password: '', collegeId: '' })
   const [colleges, setColleges] = useState<any[]>([])
+
+  // Ban / shadow-ban dialog state
+  const [modDialog, setModDialog] = useState<{ user: any; mode: 'ban' | 'shadowban' } | null>(null)
+  const [modReason, setModReason] = useState('')
+  const [modActing, setModActing] = useState(false)
 
   useEffect(() => {
     if (isAddOpen && colleges.length === 0) {
@@ -72,15 +77,53 @@ export default function AdminUsersDashboard() {
   }
 
   const handleToggleStatus = async (targetUser: any) => {
+    if (targetUser.isActive) {
+      setModDialog({ user: targetUser, mode: 'ban' })
+      return
+    }
     try {
-      const updated = await apiClient(`/admin/users/${targetUser.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ isActive: !targetUser.isActive, role: targetUser.role, name: targetUser.name })
+      await apiClient(`/admin/users/${targetUser.id}/unban`, { method: 'POST' })
+      setUsers(prev => prev.map(u => u.id === targetUser.id ? { ...u, isActive: true } : u))
+      toast.success('User reinstated.')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to reinstate user')
+    }
+  }
+
+  const handleToggleShadowBan = async (targetUser: any) => {
+    if (targetUser.isShadowBanned) {
+      try {
+        await apiClient(`/admin/users/${targetUser.id}/shadow-unban`, { method: 'POST' })
+        setUsers(prev => prev.map(u => u.id === targetUser.id ? { ...u, isShadowBanned: false, shadowBanReason: null } : u))
+        toast.success('Visibility restriction lifted.')
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to lift restriction')
+      }
+      return
+    }
+    setModDialog({ user: targetUser, mode: 'shadowban' })
+  }
+
+  const submitModAction = async () => {
+    if (!modDialog || !modReason.trim()) return
+    setModActing(true)
+    try {
+      const endpoint = modDialog.mode === 'ban' ? 'ban' : 'shadow-ban'
+      await apiClient(`/admin/users/${modDialog.user.id}/${endpoint}`, {
+        method: 'POST',
+        body: JSON.stringify({ reason: modReason }),
       })
-      setUsers(prev => prev.map(u => u.id === targetUser.id ? { ...u, isActive: updated.isActive } : u))
-      toast.success('Status updated.')
-    } catch (err) {
-      toast.error('Failed to update status')
+      setUsers(prev => prev.map(u => u.id === modDialog.user.id
+        ? modDialog.mode === 'ban' ? { ...u, isActive: false } : { ...u, isShadowBanned: true, shadowBanReason: modReason }
+        : u
+      ))
+      toast.success(modDialog.mode === 'ban' ? 'User suspended.' : 'Visibility restricted.')
+      setModDialog(null)
+      setModReason('')
+    } catch (err: any) {
+      toast.error(err.message || 'Action failed.')
+    } finally {
+      setModActing(false)
     }
   }
 
@@ -187,15 +230,23 @@ export default function AdminUsersDashboard() {
                         ) : (
                           <span className="flex items-center gap-1.5 text-red-400 text-xs font-medium"><Ban className="w-3.5 h-3.5" /> Suspended</span>
                         )}
+                        {u.isShadowBanned && (
+                          <span className="flex items-center gap-1.5 text-orange-400 text-[10px] font-medium mt-1"><ShieldAlert className="w-3 h-3" /> Restricted</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-foreground/60">
                         {new Date(u.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => handleToggleStatus(u)}>
+                          <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => handleToggleStatus(u)} title={u.isActive ? 'Suspend account' : 'Reinstate account'}>
                             {u.isActive ? <Ban className="w-4 h-4 text-orange-400" /> : <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
                           </Button>
+                          {(u.role === 'STUDENT' || u.role === 'RECRUITER') && (
+                            <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => handleToggleShadowBan(u)} title={u.isShadowBanned ? 'Lift visibility restriction' : 'Restrict visibility'}>
+                              {u.isShadowBanned ? <ShieldCheck className="w-4 h-4 text-blue-400" /> : <ShieldAlert className="w-4 h-4 text-red-400" />}
+                            </Button>
+                          )}
                           <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => setEditingUser(u)}>
                             <Edit2 className="w-4 h-4 text-blue-400" />
                           </Button>
@@ -301,6 +352,38 @@ export default function AdminUsersDashboard() {
                 </div>
               </form>
               )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {modDialog && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md border-white/10 bg-background shadow-2xl">
+            <CardHeader>
+              <CardTitle>{modDialog.mode === 'ban' ? 'Suspend Account' : 'Restrict Visibility'}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-foreground/70">
+                {modDialog.mode === 'ban'
+                  ? `${modDialog.user.name} will be unable to log in until reinstated. They will be notified with this reason.`
+                  : `${modDialog.user.name} will disappear from search, recommendations${modDialog.user.role === 'STUDENT' ? ', and the leaderboard' : ''} but can still use their account. They will be notified with this reason.`}
+              </p>
+              <textarea
+                value={modReason}
+                onChange={e => setModReason(e.target.value)}
+                rows={3}
+                placeholder="Reason..."
+                className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500/50"
+                autoFocus
+              />
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => { setModDialog(null); setModReason('') }}>Cancel</Button>
+                <Button variant="destructive" onClick={submitModAction} disabled={!modReason.trim() || modActing}>
+                  {modActing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  {modDialog.mode === 'ban' ? 'Suspend' : 'Restrict'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

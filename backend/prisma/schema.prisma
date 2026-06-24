@@ -94,6 +94,12 @@ enum NotificationType {
   LEADERBOARD_RANK_CHANGED
   PROFILE_VIEWED
   SYSTEM_ALERT
+  MESSAGE_RECEIVED
+  STUDENT_VERIFIED
+  STUDENT_REJECTED
+  ACCOUNT_BANNED
+  ACCOUNT_UNBANNED
+  TPO_RECOMMENDATION
 }
 
 enum VerificationStatus {
@@ -202,6 +208,7 @@ model Student {
 
   // Profile details
   bio               String?
+  phone             String?
   location          String?
   yearOfStudy       Int?
   major             String?
@@ -229,6 +236,15 @@ model Student {
 
   clusterTier        ClusterTier        @default(BEGINNER)
 
+  // Moderation (shadow ban — TPO can act on own-college students; Admin can act on anyone)
+  isShadowBanned     Boolean            @default(false)
+  shadowBanReason    String?
+  shadowBannedAt     DateTime?
+  shadowBannedById   String?
+
+  // TPO endorsement flag — surfaced to recruiters/clients in search & discovery
+  tpoRecommended     Boolean            @default(false)
+
   isActive          Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -242,6 +258,7 @@ model Student {
   recommendations Recommendation[]
   leaderboard     Leaderboard?
   reviews         Review[]           @relation("RevieweeStudent")
+  tpoEndorsements TpoRecommendation[]
 
   @@index([reputationScore(sort: Desc)])
   @@index([collegeId])
@@ -278,6 +295,13 @@ model Recruiter {
   industry    String?
   website     String?
   isVerified  Boolean  @default(false)
+
+  // Moderation (Admin-only — recruiters have no "home college", so only Admin can act)
+  isShadowBanned   Boolean   @default(false)
+  shadowBanReason  String?
+  shadowBannedAt   DateTime?
+  shadowBannedById String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -293,6 +317,8 @@ model TPO {
   designation String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  recommendations TpoRecommendation[]
 
   @@index([collegeId])
   @@map("tpos")
@@ -378,10 +404,11 @@ model Project {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
-  skills          ProjectSkill[]
-  applications    ProjectApplication[]
-  contracts       Contract[]
-  recommendations Recommendation[]
+  skills             ProjectSkill[]
+  applications       ProjectApplication[]
+  contracts          Contract[]
+  recommendations    Recommendation[]
+  tpoRecommendations TpoRecommendation[]
 
   @@index([status])
   @@index([budget])
@@ -618,6 +645,26 @@ model Recommendation {
   @@index([studentId, matchScore(sort: Desc)])
   @@index([projectId, matchScore(sort: Desc)])
   @@map("recommendations")
+}
+
+// TPO-curated recommendation of a student for a specific project, surfaced to
+// the client alongside applicants. Decision authority stays with the client —
+// this is a signal, not a placement.
+model TpoRecommendation {
+  id        String   @id @default(uuid())
+  tpoId     String
+  tpo       TPO      @relation(fields: [tpoId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  message   String?
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, projectId])
+  @@index([projectId])
+  @@index([tpoId])
+  @@map("tpo_recommendations")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

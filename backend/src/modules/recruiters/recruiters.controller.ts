@@ -15,8 +15,8 @@ export class RecruitersController {
 
   @Get('discover')
   @ApiOperation({ summary: 'Discover verified talent' })
-  discoverTalent(@Query() query: any) {
-    return this.recruitersService.discoverTalent(query);
+  discoverTalent(@CurrentUser() user: JwtPayload, @Query() query: any) {
+    return this.recruitersService.discoverTalent(user.sub, query);
   }
 
   @Post('shortlist/:studentId')

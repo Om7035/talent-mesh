@@ -177,7 +177,7 @@ export class LeaderboardService {
             ) DESC
           ) AS "departmentRank"
         FROM students s
-        WHERE s."isActive" = true
+        WHERE s."isActive" = true AND s."isShadowBanned" = false
       )
       SELECT * FROM ranked
     `;

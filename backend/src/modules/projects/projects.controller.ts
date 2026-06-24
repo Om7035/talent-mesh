@@ -50,6 +50,16 @@ export class ProjectsController {
     return this.projectsService.findOne(id, user);
   }
 
+  @Get(':id/tpo-recommendations')
+  @Roles(Role.CLIENT)
+  @ApiOperation({ summary: 'Get TPO-recommended students for this project [CLIENT]' })
+  getTpoRecommendations(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.projectsService.getTpoRecommendations(id, user.sub);
+  }
+
   @Post()
   @Roles(Role.CLIENT)
   @HttpCode(HttpStatus.CREATED)

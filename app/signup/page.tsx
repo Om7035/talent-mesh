@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/navbar'
 import { motion } from 'framer-motion'
-import { User, Mail, Lock, ArrowRight, CheckCircle, GraduationCap } from 'lucide-react'
+import { User, Mail, Lock, ArrowRight, CheckCircle, GraduationCap, Phone } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api'
@@ -17,7 +17,7 @@ interface College {
 
 export default function SignupPage() {
   const [role, setRole] = useState<'student' | 'client' | 'recruiter' | null>(null)
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', collegeId: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', collegeId: '', phone: '' })
   const [colleges, setColleges] = useState<College[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -51,6 +51,7 @@ export default function SignupPage() {
       }
       if (role === 'student') {
         payload.collegeId = formData.collegeId
+        payload.phone = formData.phone
       }
       const data = await apiClient('/auth/signup', {
         method: 'POST',
@@ -221,6 +222,31 @@ export default function SignupPage() {
                           </option>
                         ))}
                       </select>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Phone (Student only) */}
+                {role === 'student' && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.19, duration: 0.4 }}
+                  >
+                    <label htmlFor="phone" className="block text-xs font-medium text-foreground/70 mb-2 uppercase tracking-wider">
+                      Phone Number
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                      <input
+                        id="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="+91 98765 43210"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm text-foreground placeholder-foreground/30 focus:outline-none focus:ring-1 focus:ring-white/30 focus:border-white/30 transition-all"
+                        required
+                      />
                     </div>
                   </motion.div>
                 )}

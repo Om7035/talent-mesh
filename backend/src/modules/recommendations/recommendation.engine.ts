@@ -209,7 +209,7 @@ export class RecommendationEngine {
     const projectDifficultyWeight = RecommendationEngine.DIFFICULTY_WEIGHTS[project.difficulty] ?? 2;
 
     const students = await this.prisma.student.findMany({
-      where: { isActive: true, verificationStatus: 'VERIFIED' },
+      where: { isActive: true, verificationStatus: 'VERIFIED', isShadowBanned: false },
       include: {
         skills: { include: { skill: true } },
         contracts: {

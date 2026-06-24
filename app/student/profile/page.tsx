@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
-import { Plus, Trash2, Globe, MapPin, BookOpen, User, Loader2, CheckCircle, Link as LinkIcon, Save, Code2, Briefcase } from 'lucide-react'
+import { Plus, Trash2, Globe, MapPin, BookOpen, User, Loader2, CheckCircle, Link as LinkIcon, Save, Code2, Briefcase, Phone } from 'lucide-react'
 import { toast } from 'sonner'
 
 const itemVariants = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }
@@ -38,7 +38,7 @@ export default function StudentProfilePage() {
   const [newSkillName, setNewSkillName] = useState('')
   const [addingSkill, setAddingSkill] = useState(false)
   const [formData, setFormData] = useState({
-    bio: '', location: '', major: '', yearOfStudy: '',
+    bio: '', phone: '', location: '', major: '', yearOfStudy: '',
     githubUrl: '', linkedinUrl: '', portfolioUrl: '',
   })
 
@@ -54,6 +54,7 @@ export default function StudentProfilePage() {
         setAvailableSkills(skills?.skills || skills || [])
         setFormData({
           bio: p?.bio || '',
+          phone: p?.phone || '',
           location: p?.location || '',
           major: p?.major || '',
           yearOfStudy: p?.yearOfStudy?.toString() || '',
@@ -184,6 +185,7 @@ export default function StudentProfilePage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input label="Phone Number" icon={<Phone className="w-4 h-4" />} value={formData.phone} onChange={(e: any) => setFormData(p => ({ ...p, phone: e.target.value }))} placeholder="+91 98765 43210" />
                 <Input label="Location" icon={<MapPin className="w-4 h-4" />} value={formData.location} onChange={(e: any) => setFormData(p => ({ ...p, location: e.target.value }))} placeholder="e.g. New Delhi, India" />
                 <Input label="Major / Field of Study" icon={<BookOpen className="w-4 h-4" />} value={formData.major} onChange={(e: any) => setFormData(p => ({ ...p, major: e.target.value }))} placeholder="e.g. Computer Science" />
                 <Input label="Year of Study" type="number" min={1} max={6} value={formData.yearOfStudy} onChange={(e: any) => setFormData(p => ({ ...p, yearOfStudy: e.target.value }))} placeholder="e.g. 3" />

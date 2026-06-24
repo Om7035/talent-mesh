@@ -3,6 +3,7 @@ import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 
 export class UpdateStudentProfileDto {
   @IsOptional() @IsString() bio?: string;
+  @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() location?: string;
   @IsOptional() @IsUrl() githubUrl?: string;
   @IsOptional() @IsUrl() linkedinUrl?: string;

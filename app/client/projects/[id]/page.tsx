@@ -19,6 +19,7 @@ export default function ClientProjectDetailsPage({ params }: { params: { id: str
   const [contract, setContract] = useState<any>(null)
   const [applications, setApplications] = useState<any[]>([])
   const [candidates, setCandidates] = useState<any[]>([])
+  const [tpoRecommendations, setTpoRecommendations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [hiringId, setHiringId] = useState<string | null>(null)
@@ -33,11 +34,13 @@ export default function ClientProjectDetailsPage({ params }: { params: { id: str
       apiClient(`/contracts/project/${params.id}`).catch(() => null),
       apiClient(`/projects/${params.id}/applications`).catch(() => []),
       apiClient(`/recommendations/project/${params.id}/candidates?limit=5`).catch(() => []),
-    ]).then(([projData, contractData, appsData, candidatesData]) => {
+      apiClient(`/projects/${params.id}/tpo-recommendations`).catch(() => []),
+    ]).then(([projData, contractData, appsData, candidatesData, tpoRecData]) => {
       setProject(projData)
       setContract(contractData)
       setApplications(Array.isArray(appsData) ? appsData : [])
       setCandidates(Array.isArray(candidatesData) ? candidatesData : [])
+      setTpoRecommendations(Array.isArray(tpoRecData) ? tpoRecData : [])
       setLoading(false)
     })
   }
@@ -245,6 +248,39 @@ export default function ClientProjectDetailsPage({ params }: { params: { id: str
                       ))}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* TPO-Recommended Students */}
+            {!contract && tpoRecommendations.length > 0 && (
+              <Card glass className="border-emerald-500/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Star className="w-5 h-5 text-emerald-400" /> TPO Recommended</CardTitle>
+                  <CardDescription>Students personally vouched for by their college placement officer</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {tpoRecommendations.map((r: any) => {
+                      const hasApplied = applications.some((a: any) => a.student?.id === r.student?.id)
+                      return (
+                        <div key={r.id} className="p-3 rounded-lg border border-emerald-500/10 bg-emerald-500/5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">{r.student?.user?.name}</p>
+                              <p className="text-xs text-foreground/50">{r.student?.college?.name} · Recommended by {r.tpo?.user?.name}</p>
+                            </div>
+                            <span className={`text-[10px] uppercase tracking-wider font-medium px-2.5 py-1 rounded-full border ${
+                              hasApplied ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-white/5 text-foreground/50 border-white/10'
+                            }`}>
+                              {hasApplied ? 'Has Applied' : 'Not Yet Applied'}
+                            </span>
+                          </div>
+                          {r.message && <p className="text-xs text-foreground/60 mt-2 italic">"{r.message}"</p>}
+                        </div>
+                      )
+                    })}
+                  </div>
                 </CardContent>
               </Card>
             )}

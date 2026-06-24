@@ -18,9 +18,15 @@ export class TpoController {
   getCollegeStudents(
     @CurrentUser() user: JwtPayload,
     @Query('page') page = 1,
-    @Query('limit') limit = 20
+    @Query('limit') limit = 20,
+    @Query('search') search?: string,
+    @Query('departmentId') departmentId?: string,
+    @Query('verificationStatus') verificationStatus?: string,
+    @Query('clusterTier') clusterTier?: string,
   ) {
-    return this.tpoService.getCollegeStudents(user.sub, Number(page), Number(limit));
+    return this.tpoService.getCollegeStudents(user.sub, Number(page), Number(limit), {
+      search, departmentId, verificationStatus, clusterTier,
+    });
   }
 
   @Get('analytics')
@@ -55,5 +61,38 @@ export class TpoController {
   @ApiOperation({ summary: 'Generate college report data [TPO]' })
   generateReport(@CurrentUser() user: JwtPayload) {
     return this.tpoService.generateReport(user.sub);
+  }
+
+  @Patch('students/:studentId/shadow-ban')
+  @ApiOperation({ summary: 'Restrict a student\'s visibility (own college only) [TPO]' })
+  shadowBanStudent(
+    @Param('studentId') studentId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body('reason') reason: string,
+  ) {
+    return this.tpoService.shadowBanStudent(user.sub, studentId, reason);
+  }
+
+  @Patch('students/:studentId/shadow-unban')
+  @ApiOperation({ summary: 'Lift a student\'s visibility restriction (own college only) [TPO]' })
+  shadowUnbanStudent(@Param('studentId') studentId: string, @CurrentUser() user: JwtPayload) {
+    return this.tpoService.shadowUnbanStudent(user.sub, studentId);
+  }
+
+  @Patch('students/:studentId/toggle-recommended')
+  @ApiOperation({ summary: 'Toggle "TPO Recommended" badge for a student (own college only) [TPO]' })
+  toggleRecommended(@Param('studentId') studentId: string, @CurrentUser() user: JwtPayload) {
+    return this.tpoService.toggleRecommended(user.sub, studentId);
+  }
+
+  @Patch('students/:studentId/recommend/:projectId')
+  @ApiOperation({ summary: 'Recommend a student for a specific project to its client [TPO]' })
+  recommendStudentForProject(
+    @Param('studentId') studentId: string,
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body('message') message?: string,
+  ) {
+    return this.tpoService.recommendStudentForProject(user.sub, studentId, projectId, message);
   }
 }

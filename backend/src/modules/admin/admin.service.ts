@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async getPlatformStats() {
     const [totalUsers, totalProjects, totalContracts, totalRevenue, disputes, systemMetrics] = await Promise.all([
@@ -36,14 +40,34 @@ export class AdminService {
     }
 
     const [users, total] = await Promise.all([
-      this.prisma.user.findMany({ where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.user.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          student: { select: { isShadowBanned: true, shadowBanReason: true } },
+          recruiter: { select: { isShadowBanned: true, shadowBanReason: true } },
+        },
+      }),
       this.prisma.user.count({ where }),
     ]);
-    return { users, total, page, limit, totalPages: Math.ceil(total / limit) };
+
+    return {
+      users: users.map((u: any) => ({
+        ...u,
+        isShadowBanned: u.student?.isShadowBanned || u.recruiter?.isShadowBanned || false,
+        shadowBanReason: u.student?.shadowBanReason || u.recruiter?.shadowBanReason || null,
+        student: undefined,
+        recruiter: undefined,
+      })),
+      total, page, limit, totalPages: Math.ceil(total / limit),
+    };
   }
 
+  /** Hard ban: blocks login entirely. */
   async banUser(adminUserId: string, targetUserId: string, reason: string) {
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({ where: { id: targetUserId } });
       if (!user) throw new NotFoundException();
 
@@ -60,6 +84,119 @@ export class AdminService {
       });
       return updated;
     });
+
+    await this.notificationsService.send({
+      userId: targetUserId,
+      type: 'ACCOUNT_BANNED',
+      title: 'Your account has been suspended',
+      message: `An administrator has suspended your account. Reason: ${reason}. You will not be able to log in until this is reversed.`,
+    });
+
+    return result;
+  }
+
+  /** Reverses a hard ban — restores login access. */
+  async unbanUser(adminUserId: string, targetUserId: string) {
+    const result = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({ where: { id: targetUserId } });
+      if (!user) throw new NotFoundException();
+
+      const updated = await tx.user.update({ where: { id: targetUserId }, data: { isActive: true } });
+
+      await tx.auditLog.create({
+        data: { userId: adminUserId, action: 'USER_UNBANNED', resource: 'User', resourceId: targetUserId },
+      });
+      return updated;
+    });
+
+    await this.notificationsService.send({
+      userId: targetUserId,
+      type: 'ACCOUNT_UNBANNED',
+      title: 'Your account has been reinstated',
+      message: 'An administrator has lifted the suspension on your account. You can log in again.',
+    });
+
+    return result;
+  }
+
+  /**
+   * Shadow ban: restricts a STUDENT or RECRUITER's visibility/functionality
+   * without blocking login. Students disappear from search/recommendations/
+   * leaderboard and their applications are hidden from clients. Recruiters lose
+   * access to talent discovery results. The user IS notified (unlike a typical
+   * silent shadow ban) so they understand why their results changed.
+   */
+  async shadowBanUser(adminUserId: string, targetUserId: string, reason: string) {
+    if (!reason?.trim()) throw new BadRequestException('A reason is required.');
+
+    const user = await this.prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!user) throw new NotFoundException();
+    if (user.role !== 'STUDENT' && user.role !== 'RECRUITER') {
+      throw new BadRequestException('Shadow ban only applies to STUDENT or RECRUITER accounts.');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      if (user.role === 'STUDENT') {
+        const student = await tx.student.update({
+          where: { userId: targetUserId },
+          data: { isShadowBanned: true, shadowBanReason: reason, shadowBannedAt: new Date(), shadowBannedById: adminUserId },
+        });
+        await tx.leaderboard.deleteMany({ where: { studentId: student.id } });
+      } else {
+        await tx.recruiter.update({
+          where: { userId: targetUserId },
+          data: { isShadowBanned: true, shadowBanReason: reason, shadowBannedAt: new Date(), shadowBannedById: adminUserId },
+        });
+      }
+      await tx.auditLog.create({
+        data: { userId: adminUserId, action: 'USER_SHADOW_BANNED', resource: 'User', resourceId: targetUserId, metadata: { reason } },
+      });
+    });
+
+    await this.notificationsService.send({
+      userId: targetUserId,
+      type: 'ACCOUNT_BANNED',
+      title: 'Your visibility has been restricted',
+      message: user.role === 'STUDENT'
+        ? `An administrator has restricted your profile's visibility to clients and recruiters. Reason: ${reason}.`
+        : `An administrator has restricted your talent discovery access. Reason: ${reason}.`,
+    });
+
+    return { success: true };
+  }
+
+  async shadowUnbanUser(adminUserId: string, targetUserId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!user) throw new NotFoundException();
+    if (user.role !== 'STUDENT' && user.role !== 'RECRUITER') {
+      throw new BadRequestException('Shadow ban only applies to STUDENT or RECRUITER accounts.');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      if (user.role === 'STUDENT') {
+        await tx.student.update({
+          where: { userId: targetUserId },
+          data: { isShadowBanned: false, shadowBanReason: null, shadowBannedAt: null, shadowBannedById: null },
+        });
+      } else {
+        await tx.recruiter.update({
+          where: { userId: targetUserId },
+          data: { isShadowBanned: false, shadowBanReason: null, shadowBannedAt: null, shadowBannedById: null },
+        });
+      }
+      await tx.auditLog.create({
+        data: { userId: adminUserId, action: 'USER_SHADOW_UNBANNED', resource: 'User', resourceId: targetUserId },
+      });
+    });
+
+    await this.notificationsService.send({
+      userId: targetUserId,
+      type: 'ACCOUNT_UNBANNED',
+      title: 'Visibility restored',
+      message: 'An administrator has lifted the visibility restriction on your account.',
+    });
+
+    return { success: true };
   }
 
   async createUser(adminUserId: string, data: any) {

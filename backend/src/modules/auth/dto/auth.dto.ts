@@ -38,6 +38,11 @@ export class SignupDto {
   @IsOptional()
   yearOfStudy?: number;
 
+  @ApiPropertyOptional({ example: '+91 98765 43210', description: 'Phone number (STUDENT only)' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
   // ── Client/Recruiter-specific fields ──
   @ApiPropertyOptional({ example: 'TechCorp Inc.', description: 'Company name (CLIENT/RECRUITER)' })
   @IsOptional()

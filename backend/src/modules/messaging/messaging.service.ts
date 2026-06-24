@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException, Inject, forwardRef }
 import { PrismaService } from '../../database/prisma.service';
 import { MessagingGateway } from './messaging.gateway';
 import { ActivityService } from '../activity/activity.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class MessagingService {
@@ -10,6 +11,7 @@ export class MessagingService {
     @Inject(forwardRef(() => MessagingGateway))
     private readonly gateway: MessagingGateway,
     private readonly activityService: ActivityService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /** Get or create a 1:1 conversation between two users */
@@ -17,6 +19,15 @@ export class MessagingService {
     // Check if other user exists
     const otherUser = await this.prisma.user.findUnique({ where: { id: otherUserId }, select: { id: true, name: true, avatarUrl: true, role: true } });
     if (!otherUser) throw new NotFoundException('User not found');
+
+    // Shadow-banned recruiters lose the ability to initiate new contact with students
+    const currentUser = await this.prisma.user.findUnique({ where: { id: currentUserId }, select: { role: true } });
+    if (currentUser?.role === 'RECRUITER') {
+      const recruiter = await this.prisma.recruiter.findUnique({ where: { userId: currentUserId } });
+      if (recruiter?.isShadowBanned) {
+        throw new ForbiddenException('Unable to start this conversation.');
+      }
+    }
 
     // Find existing conversation with both users
     const existing = await this.prisma.conversation.findFirst({
@@ -149,6 +160,21 @@ export class MessagingService {
 
     // Notify connected clients via Socket.IO
     this.gateway.notifyNewMessage(conversationId, message);
+
+    // Persist a notification for offline/disconnected recipients
+    const otherParticipants = await this.prisma.conversationParticipant.findMany({
+      where: { conversationId, userId: { not: senderId } },
+      select: { userId: true },
+    });
+    for (const { userId } of otherParticipants) {
+      await this.notificationsService.send({
+        userId,
+        type: 'MESSAGE_RECEIVED',
+        title: `New message from ${message.sender.name}`,
+        message: content.length > 100 ? `${content.slice(0, 100)}…` : content,
+        actionUrl: '/messages',
+      });
+    }
 
     // Log Activity
     this.activityService.logEvent({
