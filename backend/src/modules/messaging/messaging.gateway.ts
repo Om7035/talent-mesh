@@ -46,7 +46,7 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
         return;
       }
 
-      const secret = this.configService.get<string>('JWT_SECRET') || '';
+      const secret = this.configService.get<string>('JWT_ACCESS_SECRET') || '';
       const payload = verify(token, secret) as unknown as WsJwtPayload;
       
       const userId = payload.sub;

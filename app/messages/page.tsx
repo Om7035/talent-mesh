@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Navbar } from '@/components/layout/navbar'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRequireAuth } from '@/lib/auth-context'
+import { useSocket } from '@/lib/socket-context'
 import { apiClient } from '@/lib/api'
 import { Send, Search, MessageSquare, Loader2, ArrowLeft, User, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -46,6 +47,7 @@ function formatTime(dateStr: string) {
 
 export default function MessagesPage() {
   const { user } = useRequireAuth()
+  const { socket } = useSocket()
   const [conversations, setConversations] = useState<any[]>([])
   const [activeConvId, setActiveConvId] = useState<string | null>(null)
   const [messages, setMessages] = useState<any[]>([])
@@ -56,6 +58,7 @@ export default function MessagesPage() {
   const [showConvList, setShowConvList] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
+  const activeConvIdRef = useRef<string | null>(null)
 
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [userSearchQuery, setUserSearchQuery] = useState('')
@@ -78,32 +81,68 @@ export default function MessagesPage() {
     fetchConversations()
   }, [user, fetchConversations])
 
-  const loadMessages = useCallback(async (convId: string) => {
-    setLoadingMessages(true)
+  const loadMessages = useCallback(async (convId: string, { silent = false } = {}) => {
+    if (!silent) setLoadingMessages(true)
     try {
       const data = await apiClient(`/messages/conversations/${convId}/messages`)
       setMessages(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error('Failed to load messages:', err)
     } finally {
-      setLoadingMessages(false)
+      if (!silent) setLoadingMessages(false)
     }
   }, [])
 
   const selectConversation = useCallback(async (convId: string) => {
     setActiveConvId(convId)
+    activeConvIdRef.current = convId
     setShowConvList(false)
     await loadMessages(convId)
     // Update unread in local state
     setConversations(prev => prev.map(c => c.id === convId ? { ...c, unreadCount: 0 } : c))
-    // Start polling for new messages
+    // Join the realtime room for this conversation
+    socket?.emit('join_conversation', convId)
+    // Fallback poll (silent, no spinner) in case the socket connection drops
     clearInterval(pollRef.current)
-    pollRef.current = setInterval(() => loadMessages(convId), 4000)
-  }, [loadMessages])
+    pollRef.current = setInterval(() => loadMessages(convId, { silent: true }), 15000)
+  }, [loadMessages, socket])
 
   useEffect(() => {
     return () => clearInterval(pollRef.current)
   }, [])
+
+  // Re-join the active conversation's room whenever the socket (re)connects
+  useEffect(() => {
+    if (socket && activeConvIdRef.current) {
+      socket.emit('join_conversation', activeConvIdRef.current)
+    }
+  }, [socket])
+
+  // Listen for realtime message events
+  useEffect(() => {
+    if (!socket) return
+
+    const handleNewMessage = (msg: any) => {
+      setConversations(prev => prev.map(c =>
+        c.id === msg.conversationId
+          ? {
+              ...c,
+              lastMessagePreview: msg.content,
+              lastMessageAt: msg.createdAt,
+              unreadCount: msg.senderId === user?.id || msg.conversationId === activeConvIdRef.current ? c.unreadCount : (c.unreadCount || 0) + 1,
+            }
+          : c
+      ))
+      if (msg.conversationId === activeConvIdRef.current && msg.senderId !== user?.id) {
+        setMessages(prev => (prev.some(m => m.id === msg.id) ? prev : [...prev, msg]))
+      }
+    }
+
+    socket.on('new_message', handleNewMessage)
+    return () => {
+      socket.off('new_message', handleNewMessage)
+    }
+  }, [socket, user?.id])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })

@@ -19,6 +19,7 @@ export interface AuthUser {
 
 interface AuthContextType {
   user: AuthUser | null
+  token: string | null
   isLoading: boolean
   isAuthenticated: boolean
   login: (accessToken: string, refreshToken: string, userData: AuthUser) => void
@@ -28,6 +29,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  token: null,
   isLoading: true,
   isAuthenticated: false,
   login: () => {},
@@ -37,13 +39,15 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [token, setTokenState] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   const refreshUser = useCallback(async () => {
-    const token = getToken()
-    if (!token) {
+    const accessToken = getToken()
+    if (!accessToken) {
       setUser(null)
+      setTokenState(null)
       setIsLoading(false)
       return
     }
@@ -53,10 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data.client = data.recruiter
       }
       setUser(data)
+      setTokenState(accessToken)
     } catch {
       // Token is invalid/expired — clear it
       removeToken()
       setUser(null)
+      setTokenState(null)
     } finally {
       setIsLoading(false)
     }
@@ -69,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((accessToken: string, refreshToken: string, userData: AuthUser) => {
     setToken(accessToken, refreshToken, userData.role)
     setUser(userData)
+    setTokenState(accessToken)
   }, [])
 
   const logout = useCallback(async () => {
@@ -79,12 +86,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     removeToken()
     setUser(null)
+    setTokenState(null)
     router.push('/login')
   }, [router])
 
   return (
     <AuthContext.Provider value={{
       user,
+      token,
       isLoading,
       isAuthenticated: !!user,
       login,
