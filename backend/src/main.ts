@@ -128,7 +128,7 @@ async function bootstrap() {
   }
 
   await app.listen(port);
-  console.log(`\n🚀 TalentMesh API running on http://localhost:${port}/${apiPrefix}/v1`);
+  console.log(`\n🚀 TalentMesh API running on http://localhost:${port}/${apiPrefix}`);
   console.log(`🌍 Environment: ${nodeEnv}`);
 }
 
