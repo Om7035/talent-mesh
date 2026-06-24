@@ -279,6 +279,7 @@ async function main() {
   // ─────────────────────────────────────────────────────────────────
   let appCount = 0;
   let contractCount = 0;
+  const contractRecords: any[] = [];
 
   for (let i = 5; i < 25; i++) { // Skip DRAFT projects (0-4)
     const project = projectRecords[i];
@@ -321,6 +322,7 @@ async function main() {
 
         // ESCROW & WALLET logic
         const clientUserId = clientRecords.find(c => c.profile.id === project.clientId)!.user.id;
+        contractRecords.push({ contract, project, student, clientUserId });
         
         // Lock Escrow
         const platformFee = project.budget * 0.1;
@@ -352,6 +354,108 @@ async function main() {
   }
 
   console.log(`✅ ${appCount} Applications and ${contractCount} Contracts seeded with Escrow logic`);
+
+  // ─────────────────────────────────────────────────────────────────
+  // NOTIFICATIONS
+  // ─────────────────────────────────────────────────────────────────
+  let notificationCount = 0;
+  for (const { contract, project, student, clientUserId } of contractRecords) {
+    const isCompleted = contract.status === ProjectStatus.COMPLETED;
+
+    await prisma.notification.create({
+      data: {
+        userId: student.userId, type: 'APPLICATION_ACCEPTED', title: 'Application Accepted!',
+        message: `You've been hired for "${project.title}". Get started once escrow is funded.`,
+        actionUrl: `/student/projects/${project.id}`, isRead: false,
+      },
+    });
+    await prisma.notification.create({
+      data: {
+        userId: clientUserId, type: 'CONTRACT_FUNDED', title: 'Escrow Funded',
+        message: `Escrow for "${project.title}" has been funded and the contract is active.`,
+        actionUrl: `/client/projects/${project.id}`, isRead: true,
+      },
+    });
+    notificationCount += 2;
+
+    if (isCompleted) {
+      await prisma.notification.create({
+        data: {
+          userId: student.userId, type: 'PAYMENT_RELEASED', title: 'Payment Released',
+          message: `Your payment for "${project.title}" has been released to your wallet.`,
+          actionUrl: '/student/wallet', isRead: false,
+        },
+      });
+      await prisma.notification.create({
+        data: {
+          userId: student.userId, type: 'REVIEW_RECEIVED', title: 'New Review Received',
+          message: `You received a 5-star review for "${project.title}".`,
+          actionUrl: `/student/projects/${project.id}`, isRead: false,
+        },
+      });
+      notificationCount += 2;
+    }
+  }
+  await prisma.notification.create({
+    data: { userId: adminUser.id, type: 'SYSTEM_ALERT', title: 'Weekly Platform Summary', message: 'Platform activity report is ready for review.', isRead: false },
+  });
+  notificationCount++;
+  console.log(`✅ ${notificationCount} Notifications seeded`);
+
+  // ─────────────────────────────────────────────────────────────────
+  // MESSAGES / CONVERSATIONS
+  // ─────────────────────────────────────────────────────────────────
+  let messageCount = 0;
+  const conversationPairs = contractRecords.slice(0, 4);
+  for (const { project, student, clientUserId } of conversationPairs) {
+    const conversation = await prisma.conversation.create({
+      data: {
+        lastMessage: 'Sounds good, looking forward to it!',
+        lastMessageAt: new Date(),
+        participants: {
+          create: [
+            { userId: clientUserId, unreadCount: 0 },
+            { userId: student.userId, unreadCount: 1 },
+          ],
+        },
+      },
+    });
+
+    const thread = [
+      { senderId: clientUserId, content: `Hi! Excited to have you on board for "${project.title}".` },
+      { senderId: student.userId, content: 'Thank you! I will start right away and keep you updated.' },
+      { senderId: clientUserId, content: 'Great, let me know if you need any clarification on requirements.' },
+      { senderId: student.userId, content: 'Sounds good, looking forward to it!' },
+    ];
+    for (const [idx, m] of thread.entries()) {
+      await prisma.message.create({
+        data: {
+          conversationId: conversation.id, senderId: m.senderId, content: m.content,
+          isRead: idx < thread.length - 1, createdAt: new Date(Date.now() - (thread.length - idx) * 3600000),
+        },
+      });
+      messageCount++;
+    }
+  }
+  console.log(`✅ ${messageCount} Messages across ${conversationPairs.length} Conversations seeded`);
+
+  // ─────────────────────────────────────────────────────────────────
+  // DISPUTES
+  // ─────────────────────────────────────────────────────────────────
+  const disputeCandidates = contractRecords.filter(c => c.contract.status === ProjectStatus.IN_PROGRESS).slice(0, 2);
+  for (const [idx, { contract, project, student, clientUserId }] of disputeCandidates.entries()) {
+    await prisma.dispute.create({
+      data: {
+        contractId: contract.id,
+        filedById: clientUserId,
+        filedAgainst: student.userId,
+        reason: `Deliverables for "${project.title}" are behind the agreed timeline.`,
+        evidence: 'See attached screenshots of the project board showing missed checkpoints.',
+        status: idx === 0 ? 'OPEN' : 'UNDER_INVESTIGATION',
+      },
+    });
+  }
+  console.log(`✅ ${disputeCandidates.length} Disputes seeded`);
 
   console.log('\n🎉 Pune Demo Dataset seeding complete!');
   console.log('\n📝 Test Accounts (Password for all except Admin is Pass123!):');
