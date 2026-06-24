@@ -31,7 +31,7 @@ export default function FeaturesPage() {
     },
     {
       icon: <Brain className="w-8 h-8" />,
-      title: 'AI-Powered Matching',
+      title: 'Smart-Powered Matching',
       description: 'Smart algorithms that match students with perfect project opportunities',
       details: [
         'Skill-based matching',
@@ -234,7 +234,7 @@ export default function FeaturesPage() {
                 </thead>
                 <tbody>
                   {[
-                    ['AI-Powered Matching', true, false, false],
+                    ['Smart-Powered Matching', true, false, false],
                     ['Real-Time Reputation Score', true, true, true],
                     ['College Integration', true, false, false],
                     ['Recruiter Discovery', true, false, false],

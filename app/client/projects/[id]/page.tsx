@@ -296,11 +296,11 @@ export default function ClientProjectDetailsPage({ params }: { params: { id: str
               </Card>
             )}
 
-            {/* AI-Matched Candidates */}
+            {/* Smart-Matched Candidates */}
             {!contract && candidates.length > 0 && (
               <Card glass>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-violet-400" /> AI-Matched Candidates</CardTitle>
+                  <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-violet-400" /> Smart-Matched Candidates</CardTitle>
                   <CardDescription>Top students matched to this project, even if they haven't applied yet</CardDescription>
                 </CardHeader>
                 <CardContent>

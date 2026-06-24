@@ -15,7 +15,7 @@ export default function AboutPage() {
     {
       icon: <Zap className="w-6 h-6" />,
       title: 'Innovation',
-      description: 'Leveraging AI and smart algorithms to match talent with perfect opportunities',
+      description: 'Leveraging smart algorithms to match talent with perfect opportunities',
     },
     {
       icon: <Globe className="w-6 h-6" />,

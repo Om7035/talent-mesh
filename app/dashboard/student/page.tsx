@@ -301,13 +301,13 @@ export default function StudentDashboard() {
           </motion.div>
         )}
 
-        {/* AI Recommended Projects */}
+        {/* Smart Recommended Projects */}
         {recommendations.length > 0 && (
           <motion.div variants={itemVariants}>
             <Card glass>
               <CardHeader>
                 <CardTitle>Recommended For You</CardTitle>
-                <CardDescription>AI-matched projects based on your skills, reputation, and difficulty fit</CardDescription>
+                <CardDescription>Smart-matched projects based on your skills, reputation, and difficulty fit</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">

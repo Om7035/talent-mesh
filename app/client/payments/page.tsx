@@ -60,7 +60,7 @@ export default function ClientPaymentsPage() {
         key: keyId || 'rzp_test_mockkey', // fallback for dev
         amount: order.amount,
         currency: order.currency,
-        name: 'TalentMesh AI',
+        name: 'TalentMesh Smart',
         description: 'Wallet Deposit',
         order_id: order.orderId,
         handler: async (response: any) => {

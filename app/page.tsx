@@ -32,7 +32,7 @@ export default function Page() {
     {
       icon: <BarChart3 className="w-6 h-6" />,
       title: 'Smart Matching',
-      description: 'AI-powered project recommendations based on skills and experience from Pune tech ecosystem',
+      description: 'Smart-powered project recommendations based on skills and experience from Pune tech ecosystem',
     },
     {
       icon: <Award className="w-6 h-6" />,
@@ -324,7 +324,7 @@ export default function Page() {
 
             {/* Divider */}
             <div className="border-t border-border pt-12 text-center">
-              <p className="text-sm text-foreground/50 font-normal">&copy; 2024 TalentMesh AI. All rights reserved.</p>
+              <p className="text-sm text-foreground/50 font-normal">&copy; 2024 TalentMesh Smart. All rights reserved.</p>
             </div>
           </div>
         </footer>
