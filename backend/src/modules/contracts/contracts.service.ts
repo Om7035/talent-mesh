@@ -369,8 +369,7 @@ export class ContractsService {
         where: { id: studentWallet.id },
         data: {
           balance: { increment: escrow.amount },
-          totalEarnings: { increment: escrow.amount },
-        } as any,
+        },
       });
 
       await tx.transaction.create({
