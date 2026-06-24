@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { apiClient } from '@/lib/api'
 import { useRequireAuth } from '@/lib/auth-context'
-import { Search, Loader2, Phone, Mail, CheckCircle2, XCircle, ShieldAlert, ShieldCheck, Star, Sparkles } from 'lucide-react'
+import { Search, Loader2, Phone, Mail, CheckCircle2, XCircle, ShieldAlert, ShieldCheck, Star, Sparkles, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
 const TIER_BADGE: Record<string, string> = {
@@ -28,6 +28,12 @@ export default function TPOStudentsPage() {
   const [banDialogStudentId, setBanDialogStudentId] = useState<string | null>(null)
   const [banReason, setBanReason] = useState('')
   const [actingOn, setActingOn] = useState<string | null>(null)
+  
+  // Partnership & Push State
+  const [partnerships, setPartnerships] = useState<any[]>([])
+  const [pushDialogStudentId, setPushDialogStudentId] = useState<string | null>(null)
+  const [selectedRecruiterId, setSelectedRecruiterId] = useState('')
+  const [pushMessage, setPushMessage] = useState('')
 
   const fetchStudents = useCallback(async () => {
     setLoading(true)
@@ -50,9 +56,21 @@ export default function TPOStudentsPage() {
     }
   }, [search, departmentId, verificationStatus, clusterTier])
 
+  const fetchPartnerships = useCallback(async () => {
+    try {
+      const data = await apiClient('/partnerships/my')
+      setPartnerships(data.filter((p: any) => p.status === 'ACTIVE'))
+    } catch (err) {
+      console.error(err)
+    }
+  }, [])
+
   useEffect(() => {
-    if (user) fetchStudents()
-  }, [user, fetchStudents])
+    if (user) {
+      fetchStudents()
+      fetchPartnerships()
+    }
+  }, [user, fetchStudents, fetchPartnerships])
 
   const handleVerify = async (studentId: string) => {
     setActingOn(studentId)
@@ -116,6 +134,25 @@ export default function TPOStudentsPage() {
       fetchStudents()
     } catch (err: any) {
       toast.error(err.message || 'Failed to update.')
+    } finally {
+      setActingOn(null)
+    }
+  }
+
+  const submitPush = async () => {
+    if (!pushDialogStudentId || !selectedRecruiterId) return
+    setActingOn(pushDialogStudentId)
+    try {
+      await apiClient(`/tpo/students/${pushDialogStudentId}/push-to-recruiter/${selectedRecruiterId}`, {
+        method: 'POST',
+        body: JSON.stringify({ message: pushMessage })
+      })
+      toast.success('Talent profile pushed to recruiter successfully!')
+      setPushDialogStudentId(null)
+      setSelectedRecruiterId('')
+      setPushMessage('')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to push talent.')
     } finally {
       setActingOn(null)
     }
@@ -239,8 +276,19 @@ export default function TPOStudentsPage() {
                               <ShieldCheck className="w-3.5 h-3.5" />
                             </Button>
                           ) : (
-                            <Button size="sm" variant="destructive" onClick={() => setBanDialogStudentId(s.id)} disabled={actingOn === s.id} className="h-7 px-2 text-xs">
+                            <Button size="sm" variant="destructive" onClick={() => setBanDialogStudentId(s.id)} disabled={actingOn === s.id} className="h-7 px-2 text-xs" title="Restrict">
                               <ShieldAlert className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                          {partnerships.length > 0 && !s.isShadowBanned && s.verificationStatus === 'VERIFIED' && (
+                            <Button 
+                              size="sm" 
+                              onClick={() => setPushDialogStudentId(s.id)} 
+                              disabled={actingOn === s.id} 
+                              className="h-7 px-2 bg-purple-600 hover:bg-purple-500 text-xs shadow-sm shadow-purple-500/20"
+                              title="Push to Partnered Recruiter"
+                            >
+                              <Send className="w-3.5 h-3.5" />
                             </Button>
                           )}
                         </div>
@@ -275,6 +323,51 @@ export default function TPOStudentsPage() {
                 <Button variant="destructive" onClick={submitBan} disabled={!banReason.trim() || actingOn === banDialogStudentId}>
                   {actingOn === banDialogStudentId ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                   Restrict Student
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {pushDialogStudentId && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md border-white/10 bg-background shadow-2xl">
+            <CardHeader>
+              <CardTitle>Push Talent to Partner</CardTitle>
+              <CardDescription>Send this student's profile directly to a partnered recruiter. The student will not be notified.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-foreground/70 mb-1 block">Select Partnered Recruiter</label>
+                <select
+                  value={selectedRecruiterId}
+                  onChange={(e) => setSelectedRecruiterId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50"
+                >
+                  <option value="">-- Choose a partner --</option>
+                  {partnerships.map((p) => (
+                    <option key={p.recruiter.id} value={p.recruiter.id}>
+                      {p.recruiter.companyName} ({p.recruiter.user?.name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-foreground/70 mb-1 block">Message (Optional)</label>
+                <textarea
+                  value={pushMessage}
+                  onChange={(e) => setPushMessage(e.target.value)}
+                  rows={3}
+                  placeholder="e.g. This student matches your recent hiring criteria for React developers."
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="outline" onClick={() => { setPushDialogStudentId(null); setSelectedRecruiterId(''); setPushMessage('') }}>Cancel</Button>
+                <Button className="bg-purple-600 hover:bg-purple-500" onClick={submitPush} disabled={!selectedRecruiterId || actingOn === pushDialogStudentId}>
+                  {actingOn === pushDialogStudentId ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                  Push to Recruiter
                 </Button>
               </div>
             </CardContent>

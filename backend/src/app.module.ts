@@ -26,6 +26,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { DisputesModule } from './modules/disputes/disputes.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
+import { PartnershipsModule } from './modules/partnerships/partnerships.module';
 import { configValidationSchema } from './config/config.validation';
 
 @Module({
@@ -108,6 +109,7 @@ import { configValidationSchema } from './config/config.validation';
     NotificationsModule,
     DisputesModule,
     MessagingModule,
+    PartnershipsModule,
   ],
   providers: [
     {

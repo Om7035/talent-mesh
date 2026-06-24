@@ -76,4 +76,55 @@ export class RecruitersService {
 
     return { shortlistedCount };
   }
+
+  async listRecruiters() {
+    return this.prisma.recruiter.findMany({
+      where: { isVerified: true, isShadowBanned: false },
+      select: {
+        id: true,
+        companyName: true,
+        industry: true,
+        user: { select: { name: true, avatarUrl: true } }
+      }
+    });
+  }
+
+  async getPartneredTalentPushes(recruiterUserId: string) {
+    const recruiter = await this.prisma.recruiter.findUnique({ where: { userId: recruiterUserId } });
+    if (!recruiter) throw new NotFoundException('Recruiter not found');
+
+    return this.prisma.directTalentPush.findMany({
+      where: { recruiterId: recruiter.id },
+      include: {
+        tpo: {
+          include: {
+            college: { select: { id: true, name: true, domain: true } },
+            user: { select: { name: true, avatarUrl: true } }
+          }
+        },
+        student: {
+          select: {
+            id: true,
+            bio: true,
+            location: true,
+            major: true,
+            yearOfStudy: true,
+            githubUrl: true,
+            linkedinUrl: true,
+            portfolioUrl: true,
+            reputationScore: true,
+            projectsCompleted: true,
+            avgClientRating: true,
+            clusterTier: true,
+            tpoRecommended: true,
+            verificationStatus: true,
+            user: { select: { name: true, avatarUrl: true } },
+            college: { select: { name: true } },
+            skills: { include: { skill: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
 }

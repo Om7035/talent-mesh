@@ -18,7 +18,8 @@ import {
   CreditCard,
   PieChart,
   Shield,
-  GraduationCap
+  GraduationCap,
+  Globe
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { memo } from 'react'
@@ -59,6 +60,7 @@ const roleMenus: Record<string, SidebarLink[]> = {
     { name: 'Dashboard', href: '/dashboard/recruiter', icon: <Home className="w-5 h-5" /> },
     { name: 'Marketplace', href: '/marketplace', icon: <Zap className="w-5 h-5" /> },
     { name: 'Talent Search', href: '/dashboard/recruiter', icon: <Search className="w-5 h-5" /> }, // Recruiter dashboard acts as talent search
+    { name: 'Network', href: '/recruiter/network', icon: <Globe className="w-5 h-5 text-blue-400" /> },
     { name: 'Messages', href: '/messages', icon: <MessageSquare className="w-5 h-5" /> },
     { name: 'Profile', href: '/settings/profile', icon: <User className="w-5 h-5" /> },
   ],
@@ -66,6 +68,7 @@ const roleMenus: Record<string, SidebarLink[]> = {
     { name: 'Dashboard', href: '/dashboard/tpo', icon: <Home className="w-5 h-5" /> },
     { name: 'Students', href: '/tpo/students', icon: <Users className="w-5 h-5" /> },
     { name: 'Clients', href: '/tpo/clients', icon: <Briefcase className="w-5 h-5" /> },
+    { name: 'Network', href: '/tpo/network', icon: <Globe className="w-5 h-5 text-purple-400" /> },
     { name: 'Marketplace', href: '/marketplace', icon: <Zap className="w-5 h-5" /> },
     { name: 'Analytics', href: '/tpo/analytics', icon: <BarChart3 className="w-5 h-5" /> },
     { name: 'Reports', href: '/tpo/reports', icon: <FileText className="w-5 h-5" /> },

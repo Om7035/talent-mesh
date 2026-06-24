@@ -116,6 +116,17 @@ enum ClusterTier {
   ELITE
 }
 
+enum PartnershipStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
+enum PartnershipInitiator {
+  TPO
+  RECRUITER
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CORE USER MODELS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -174,6 +185,7 @@ model College {
   departments Department[]
   students    Student[]
   tpos        TPO[]
+  partnerships CollegePartnership[]
 
   @@index([domain])
   @@map("colleges")
@@ -259,6 +271,7 @@ model Student {
   leaderboard     Leaderboard?
   reviews         Review[]           @relation("RevieweeStudent")
   tpoEndorsements TpoRecommendation[]
+  directPushes    DirectTalentPush[]
 
   @@index([reputationScore(sort: Desc)])
   @@index([collegeId])
@@ -305,6 +318,9 @@ model Recruiter {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  partnerships CollegePartnership[]
+  directPushes DirectTalentPush[]
+
   @@map("recruiters")
 }
 
@@ -319,6 +335,7 @@ model TPO {
   updatedAt   DateTime @updatedAt
 
   recommendations TpoRecommendation[]
+  directPushes    DirectTalentPush[]
 
   @@index([collegeId])
   @@map("tpos")
@@ -800,8 +817,66 @@ model ConversationParticipant {
   joinedAt       DateTime     @default(now())
 
   @@id([conversationId, userId])
-  @@index([userId])
   @@map("conversation_participants")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PARTNERSHIPS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CollegePartnership {
+  id            String                @id @default(uuid())
+  collegeId     String
+  college       College               @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  recruiterId   String
+  recruiter     Recruiter             @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  status        PartnershipStatus     @default(PENDING)
+  initiatedBy   PartnershipInitiator
+  initiatedById String                // userId of whoever sent the request, for audit/display
+  respondedAt   DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  pushes        DirectTalentPush[]
+
+  @@unique([collegeId, recruiterId])  // one partnership record per college-recruiter pair
+  @@index([recruiterId, status])
+  @@index([collegeId, status])
+  @@map("college_partnerships")
+}
+
+model DirectTalentPush {
+  id             String              @id @default(uuid())
+  partnershipId  String
+  partnership    CollegePartnership  @relation(fields: [partnershipId], references: [id], onDelete: Cascade)
+  tpoId          String
+  tpo            TPO                 @relation(fields: [tpoId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  recruiterId    String
+  recruiter      Recruiter           @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  message        String?
+  createdAt      DateTime            @default(now())
+
+  @@index([recruiterId, createdAt])
+  @@index([studentId])
+  @@map("direct_talent_pushes")
 }
 
 model Message {

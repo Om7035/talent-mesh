@@ -101,4 +101,15 @@ export class TpoController {
   getHiringClients(@CurrentUser() user: JwtPayload) {
     return this.tpoService.getHiringClients(user.sub);
   }
+
+  @Post('students/:studentId/push-to-recruiter/:recruiterId')
+  @ApiOperation({ summary: 'Push a student directly to a partnered recruiter [TPO]' })
+  pushStudentToRecruiter(
+    @Param('studentId') studentId: string,
+    @Param('recruiterId') recruiterId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body('message') message?: string,
+  ) {
+    return this.tpoService.pushStudentToRecruiter(user.sub, studentId, recruiterId, message);
+  }
 }

@@ -288,4 +288,45 @@ export class TpoService {
     }
     return Array.from(seen.values());
   }
+
+  async pushStudentToRecruiter(tpoUserId: string, studentId: string, recruiterId: string, message?: string) {
+    const { tpo, student } = await this.assertOwnCollegeStudent(tpoUserId, studentId);
+
+    // 1. Verify active partnership
+    const partnership = await this.prisma.collegePartnership.findUnique({
+      where: {
+        collegeId_recruiterId: {
+          collegeId: tpo.collegeId,
+          recruiterId: recruiterId,
+        }
+      },
+      include: { recruiter: { include: { user: true } } }
+    });
+
+    if (!partnership || partnership.status !== 'ACTIVE') {
+      throw new ForbiddenException('You must have an ACTIVE partnership with this recruiter to push talent.');
+    }
+
+    // 2. Create the DirectTalentPush record
+    const push = await this.prisma.directTalentPush.create({
+      data: {
+        partnershipId: partnership.id,
+        tpoId: tpo.id,
+        studentId: student.id,
+        recruiterId: recruiterId,
+        message: message || null,
+      }
+    });
+
+    // 3. Notify recruiter (SILENT for student as requested)
+    await this.notificationsService.send({
+      userId: partnership.recruiter.userId,
+      type: 'SYSTEM_ALERT',
+      title: 'Top Talent Pushed to You',
+      message: `${tpo.college.name} directly pushed a student (${student.user.name}) to your talent pipeline.${message ? ` Note: ${message}` : ''}`,
+      actionUrl: '/dashboard/recruiter/network', // adjust url based on recruiter dashboard
+    });
+
+    return push;
+  }
 }

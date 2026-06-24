@@ -13,6 +13,20 @@ import { Role } from '@prisma/client';
 export class RecruitersController {
   constructor(private readonly recruitersService: RecruitersService) {}
 
+  @Get()
+  @Roles(Role.TPO, Role.ADMIN, Role.RECRUITER)
+  @ApiOperation({ summary: 'List recruiters (for TPO discovery)' })
+  listRecruiters() {
+    return this.recruitersService.listRecruiters();
+  }
+
+  @Get('partnered-talent-pushes')
+  @Roles(Role.RECRUITER)
+  @ApiOperation({ summary: 'Get direct talent pushes from partnered colleges' })
+  getPartneredTalentPushes(@CurrentUser() user: JwtPayload) {
+    return this.recruitersService.getPartneredTalentPushes(user.sub);
+  }
+
   @Get('discover')
   @ApiOperation({ summary: 'Discover verified talent' })
   discoverTalent(@CurrentUser() user: JwtPayload, @Query() query: any) {
