@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { UpdatePayoutDetailsDto } from './dto/wallet.dto';
 
 @Injectable()
 export class WalletService {
@@ -17,6 +18,22 @@ export class WalletService {
     });
     if (!wallet) throw new NotFoundException('Wallet not found');
     return wallet;
+  }
+
+  async updatePayoutDetails(userId: string, dto: UpdatePayoutDetailsDto) {
+    const wallet = await this.prisma.wallet.findUnique({ where: { userId } });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+
+    return this.prisma.wallet.update({
+      where: { userId },
+      data: {
+        ...(dto.bankName !== undefined && { bankName: dto.bankName }),
+        ...(dto.accountNumber !== undefined && { accountNumber: dto.accountNumber }),
+        ...(dto.routingNumber !== undefined && { routingNumber: dto.routingNumber }),
+        ...(dto.upiId !== undefined && { upiId: dto.upiId }),
+        ...(dto.payoutMethod !== undefined && { payoutMethod: dto.payoutMethod }),
+      },
+    });
   }
 
   async deposit(userId: string, amount: number, referenceId?: string) {

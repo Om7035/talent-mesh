@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { WalletService } from './wallet.service';
-import { DepositDto, WithdrawDto } from './dto/wallet.dto';
+import { DepositDto, WithdrawDto, UpdatePayoutDetailsDto } from './dto/wallet.dto';
 import * as crypto from 'crypto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
@@ -20,6 +20,12 @@ export class WalletController {
   @ApiOperation({ summary: 'Get current wallet balance and recent transactions' })
   getMyWallet(@CurrentUser() user: JwtPayload) {
     return this.walletService.getWallet(user.sub);
+  }
+
+  @Patch('payout-details')
+  @ApiOperation({ summary: 'Update bank/UPI payout details' })
+  updatePayoutDetails(@CurrentUser() user: JwtPayload, @Body() dto: UpdatePayoutDetailsDto) {
+    return this.walletService.updatePayoutDetails(user.sub, dto);
   }
 
   @Post('deposit-order')
