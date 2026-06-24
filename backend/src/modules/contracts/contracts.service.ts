@@ -36,7 +36,7 @@ export class ContractsService {
     [ProjectStatus.ASSIGNED]: [ProjectStatus.ESCROW_PENDING, ProjectStatus.CANCELLED],
     [ProjectStatus.ESCROW_PENDING]: [ProjectStatus.IN_PROGRESS, ProjectStatus.CANCELLED],
     [ProjectStatus.IN_PROGRESS]: [ProjectStatus.SUBMITTED, ProjectStatus.DISPUTED],
-    [ProjectStatus.SUBMITTED]: [ProjectStatus.REVIEW, ProjectStatus.DISPUTED],
+    [ProjectStatus.SUBMITTED]: [ProjectStatus.REVIEW, ProjectStatus.DISPUTED, ProjectStatus.RELEASED],
     [ProjectStatus.REVIEW]: [ProjectStatus.COMPLETED, ProjectStatus.REVISION_REQUESTED, ProjectStatus.DISPUTED],
     [ProjectStatus.REVISION_REQUESTED]: [ProjectStatus.SUBMITTED, ProjectStatus.DISPUTED],
     [ProjectStatus.COMPLETED]: [ProjectStatus.RELEASED],
@@ -296,6 +296,21 @@ export class ContractsService {
 
       this.logger.log(`Deliverable submitted for contract: ${contractId}`);
       return { message: 'Deliverable submitted. Awaiting client review.', contractId };
+    }).then(async (result) => {
+      const project = await this.prisma.project.findUnique({
+        where: { id: contract.projectId },
+        select: { title: true, client: { select: { userId: true } } },
+      });
+      if (project) {
+        await this.notificationsService.send({
+          userId: project.client.userId,
+          type: 'SUBMISSION_RECEIVED',
+          title: 'Work Submitted for Review',
+          message: `The student submitted their deliverables for "${project.title}". Please review and approve.`,
+          actionUrl: `/client/projects/${contract.projectId}`,
+        });
+      }
+      return result;
     });
   }
 
@@ -305,7 +320,7 @@ export class ContractsService {
 
   async approveAndRelease(contractId: string, clientUserId: string, dto: ApproveDeliverableDto) {
     const contract = await this.getContractWithValidation(contractId, true);
-    this.assertTransition(contract.status, ProjectStatus.COMPLETED);
+    this.assertTransition(contract.status, ProjectStatus.RELEASED);
 
     // Verify client ownership
     const client = await this.prisma.client.findUnique({ where: { userId: clientUserId } });

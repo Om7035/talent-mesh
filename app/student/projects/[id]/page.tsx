@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
 import { useEffect, useState } from 'react'
-import { Loader2, Lock, CheckCircle2, UploadCloud, FileText } from 'lucide-react'
+import { Loader2, Lock, CheckCircle2, UploadCloud, FileText, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
@@ -21,6 +21,7 @@ export default function StudentProjectDetailsPage({ params }: { params: { id: st
   const [submitting, setSubmitting] = useState(false)
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
   const [submissionLink, setSubmissionLink] = useState('')
+  const [decidingOffer, setDecidingOffer] = useState(false)
 
   const fetchData = () => {
     apiClient(`/projects/${params.id}`)
@@ -37,6 +38,32 @@ export default function StudentProjectDetailsPage({ params }: { params: { id: st
     if (!user) return
     fetchData()
   }, [user])
+
+  const handleAcceptOffer = async () => {
+    setDecidingOffer(true)
+    try {
+      await apiClient(`/contracts/${contract.id}/accept`, { method: 'POST' })
+      toast.success('Offer accepted! Waiting for the client to fund escrow.')
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to accept offer.')
+    } finally {
+      setDecidingOffer(false)
+    }
+  }
+
+  const handleRejectOffer = async () => {
+    setDecidingOffer(true)
+    try {
+      await apiClient(`/contracts/${contract.id}/reject`, { method: 'POST' })
+      toast.success('Offer declined.')
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to decline offer.')
+    } finally {
+      setDecidingOffer(false)
+    }
+  }
 
   const handleSubmitWork = async () => {
     if (!submissionLink.trim()) {
@@ -87,12 +114,34 @@ export default function StudentProjectDetailsPage({ params }: { params: { id: st
 
                 {/* ESCROW ACTIONS BASED ON CONTRACT STATUS */}
                 {contract?.status === 'ASSIGNED' && (
-                  <div className="mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                    <h4 className="font-bold text-amber-500 flex items-center gap-2">
+                  <div className="mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-4">
+                    <div>
+                      <h4 className="font-bold text-amber-500 flex items-center gap-2">
+                        <Lock className="w-5 h-5" /> Action Required: Accept This Offer
+                      </h4>
+                      <p className="text-sm text-amber-500/80 mt-1">
+                        You've been hired for this project at ₹{contract.agreedBudget}. Accept to let the client fund escrow, or decline if you no longer want this project.
+                      </p>
+                    </div>
+                    <div className="flex gap-4">
+                      <Button onClick={handleAcceptOffer} disabled={decidingOffer} className="bg-emerald-600 hover:bg-emerald-500 text-white flex-1">
+                        {decidingOffer ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ThumbsUp className="w-4 h-4 mr-2" />}
+                        Accept Offer
+                      </Button>
+                      <Button onClick={handleRejectOffer} disabled={decidingOffer} variant="destructive" className="flex-1">
+                        <ThumbsDown className="w-4 h-4 mr-2" /> Decline
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {contract?.status === 'ESCROW_PENDING' && (
+                  <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                    <h4 className="font-bold text-blue-400 flex items-center gap-2">
                       <Lock className="w-5 h-5" /> Waiting for Client Escrow Funding
                     </h4>
-                    <p className="text-sm text-amber-500/80 mt-1">
-                      You have been hired! However, please DO NOT start working yet. Wait until the client deposits ₹{contract.agreedBudget} into the secure escrow.
+                    <p className="text-sm text-blue-400/80 mt-1">
+                      You've accepted this offer. Please DO NOT start working yet — wait until the client deposits ₹{contract.agreedBudget} into the secure escrow.
                     </p>
                   </div>
                 )}

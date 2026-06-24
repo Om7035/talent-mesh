@@ -160,13 +160,24 @@ export default function ClientProjectDetailsPage({ params }: { params: { id: str
 
                 {/* ESCROW ACTIONS BASED ON CONTRACT STATUS */}
                 {contract?.status === 'ASSIGNED' && (
+                  <div className="mt-2 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <h4 className="font-bold text-amber-500 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5" /> Waiting for Student to Accept
+                    </h4>
+                    <p className="text-sm text-amber-500/80 mt-1">
+                      You've hired this student, but they need to accept the offer before you can fund escrow.
+                    </p>
+                  </div>
+                )}
+
+                {contract?.status === 'ESCROW_PENDING' && (
                   <div className="mt-2 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-amber-500 flex items-center gap-2">
                         <AlertCircle className="w-5 h-5" /> Action Required: Fund Escrow
                       </h4>
                       <p className="text-sm text-amber-500/80 mt-1">
-                        You have hired a student. You must fund the escrow (₹{contract.agreedBudget}) before they can begin working.
+                        The student accepted your offer. Fund the escrow (₹{contract.agreedBudget}) so they can begin working.
                       </p>
                     </div>
                     <Button onClick={handleFundEscrow} disabled={processing} className="bg-amber-500 hover:bg-amber-600 text-white">
