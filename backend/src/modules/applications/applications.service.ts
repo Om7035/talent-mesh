@@ -47,18 +47,22 @@ export class ApplicationsService {
       return app;
     });
 
-    const projectWithClient = await this.prisma.project.findUnique({
-      where: { id: projectId },
-      include: { client: { include: { user: true } } },
-    });
-    if (projectWithClient) {
-      await this.notificationsService.send({
-        userId: projectWithClient.client.userId,
-        type: 'APPLICATION_RECEIVED',
-        title: 'New Application Received',
-        message: `A student applied to your project "${projectWithClient.title}".`,
-        actionUrl: `/client/projects/${projectId}`,
+    try {
+      const projectWithClient = await this.prisma.project.findUnique({
+        where: { id: projectId },
+        include: { client: { include: { user: true } } },
       });
+      if (projectWithClient) {
+        await this.notificationsService.send({
+          userId: projectWithClient.client.userId,
+          type: 'APPLICATION_RECEIVED',
+          title: 'New Application Received',
+          message: `A student applied to your project "${projectWithClient.title}".`,
+          actionUrl: `/client/projects/${projectId}`,
+        });
+      }
+    } catch (err) {
+      console.error(`Failed to notify client of new application on project ${projectId}:`, err);
     }
 
     return result;
@@ -155,22 +159,26 @@ export class ApplicationsService {
       return updatedApp;
     });
 
-    if (status === 'ACCEPTED') {
-      await this.notificationsService.send({
-        userId: application.student.userId,
-        type: 'APPLICATION_ACCEPTED',
-        title: 'Application Accepted!',
-        message: `You've been accepted for "${application.project.title}". A contract will be created shortly.`,
-        actionUrl: `/student/projects/${application.projectId}`,
-      });
-    } else if (status === 'REJECTED') {
-      await this.notificationsService.send({
-        userId: application.student.userId,
-        type: 'APPLICATION_REJECTED',
-        title: 'Application Update',
-        message: `Your application for "${application.project.title}" was not selected this time.`,
-        actionUrl: `/student/projects`,
-      });
+    try {
+      if (status === 'ACCEPTED') {
+        await this.notificationsService.send({
+          userId: application.student.userId,
+          type: 'APPLICATION_ACCEPTED',
+          title: 'Application Accepted!',
+          message: `You've been accepted for "${application.project.title}". A contract will be created shortly.`,
+          actionUrl: `/student/projects/${application.projectId}`,
+        });
+      } else if (status === 'REJECTED') {
+        await this.notificationsService.send({
+          userId: application.student.userId,
+          type: 'APPLICATION_REJECTED',
+          title: 'Application Update',
+          message: `Your application for "${application.project.title}" was not selected this time.`,
+          actionUrl: `/student/projects`,
+        });
+      }
+    } catch (err) {
+      console.error(`Failed to notify student of application status change ${applicationId}:`, err);
     }
 
     return updated;

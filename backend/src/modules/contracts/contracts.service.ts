@@ -297,18 +297,22 @@ export class ContractsService {
       this.logger.log(`Deliverable submitted for contract: ${contractId}`);
       return { message: 'Deliverable submitted. Awaiting client review.', contractId };
     }).then(async (result) => {
-      const project = await this.prisma.project.findUnique({
-        where: { id: contract.projectId },
-        select: { title: true, client: { select: { userId: true } } },
-      });
-      if (project) {
-        await this.notificationsService.send({
-          userId: project.client.userId,
-          type: 'SUBMISSION_RECEIVED',
-          title: 'Work Submitted for Review',
-          message: `The student submitted their deliverables for "${project.title}". Please review and approve.`,
-          actionUrl: `/client/projects/${contract.projectId}`,
+      try {
+        const project = await this.prisma.project.findUnique({
+          where: { id: contract.projectId },
+          select: { title: true, client: { select: { userId: true } } },
         });
+        if (project) {
+          await this.notificationsService.send({
+            userId: project.client.userId,
+            type: 'SUBMISSION_RECEIVED',
+            title: 'Work Submitted for Review',
+            message: `The student submitted their deliverables for "${project.title}". Please review and approve.`,
+            actionUrl: `/client/projects/${contract.projectId}`,
+          });
+        }
+      } catch (err) {
+        this.logger.error(`Post-submission notification failed for contract ${contractId}: ${err}`);
       }
       return result;
     });
@@ -433,17 +437,23 @@ export class ContractsService {
 
       return { message: 'Payment released successfully.', amount: escrow.amount, contractId };
     }).then(async (result) => {
-      // 8. Async: Trigger reputation recalculation AFTER transaction commits
-      await this.reputationEngine.enqueueRecalculation(contract.studentId, 1); // High priority
+      // The payment transaction has already committed at this point — any failure below
+      // is a side-effect failure, not a payment failure, and must not surface as a 500.
+      try {
+        // 8. Async: Trigger reputation recalculation AFTER transaction commits
+        await this.reputationEngine.enqueueRecalculation(contract.studentId, 1); // High priority
 
-      // 9. Notify student
-      await this.notificationsService.send({
-        userId: contract.student.userId,
-        type: 'PAYMENT_RELEASED',
-        title: '💰 Payment Released!',
-        message: `₹${Number(escrow.amount).toFixed(2)} has been credited to your wallet for "${contract.project.title}".`,
-        actionUrl: `/student/wallet`,
-      });
+        // 9. Notify student
+        await this.notificationsService.send({
+          userId: contract.student.userId,
+          type: 'PAYMENT_RELEASED',
+          title: '💰 Payment Released!',
+          message: `₹${Number(escrow.amount).toFixed(2)} has been credited to your wallet for "${contract.project.title}".`,
+          actionUrl: `/student/wallet`,
+        });
+      } catch (err) {
+        this.logger.error(`Post-release side effects failed for contract ${contractId}: ${err}`);
+      }
 
       return result;
     });
