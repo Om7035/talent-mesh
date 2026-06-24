@@ -24,7 +24,21 @@ export class RecruitersService {
     const [students, total] = await Promise.all([
       this.prisma.student.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          bio: true,
+          location: true,
+          major: true,
+          yearOfStudy: true,
+          githubUrl: true,
+          linkedinUrl: true,
+          portfolioUrl: true,
+          reputationScore: true,
+          projectsCompleted: true,
+          avgClientRating: true,
+          clusterTier: true,
+          tpoRecommended: true,
+          verificationStatus: true,
           user: { select: { name: true, avatarUrl: true } },
           college: { select: { name: true } },
           skills: { include: { skill: true } }

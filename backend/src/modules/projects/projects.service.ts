@@ -175,7 +175,12 @@ export class ProjectsService {
       where: { projectId },
       include: {
         student: {
-          include: {
+          select: {
+            id: true,
+            bio: true,
+            reputationScore: true,
+            projectsCompleted: true,
+            clusterTier: true,
             user: { select: { name: true, avatarUrl: true } },
             college: { select: { name: true } },
             skills: { include: { skill: true } },

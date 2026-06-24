@@ -97,10 +97,23 @@ export class ApplicationsService {
       where: { projectId, student: { isShadowBanned: false } },
       include: {
         student: {
-          include: {
+          select: {
+            id: true,
+            bio: true,
+            location: true,
+            major: true,
+            yearOfStudy: true,
+            githubUrl: true,
+            linkedinUrl: true,
+            portfolioUrl: true,
+            reputationScore: true,
+            projectsCompleted: true,
+            avgClientRating: true,
+            clusterTier: true,
+            tpoRecommended: true,
             user: { select: { name: true, avatarUrl: true } },
             skills: { include: { skill: true } },
-            college: true,
+            college: { select: { name: true } },
           },
         },
       },

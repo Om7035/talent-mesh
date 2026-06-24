@@ -302,7 +302,12 @@ export class RecommendationEngine {
       take: limit,
       include: {
         student: {
-          include: {
+          select: {
+            id: true,
+            bio: true,
+            reputationScore: true,
+            projectsCompleted: true,
+            clusterTier: true,
             user: { select: { name: true, avatarUrl: true } },
             skills: { include: { skill: true } },
             college: { select: { name: true } },
