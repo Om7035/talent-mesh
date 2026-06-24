@@ -23,7 +23,14 @@ export default function AdminUsersDashboard() {
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
   
   // Forms state
-  const [formData, setFormData] = useState({ name: '', email: '', role: 'STUDENT', password: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', role: 'STUDENT', password: '', collegeId: '' })
+  const [colleges, setColleges] = useState<any[]>([])
+
+  useEffect(() => {
+    if (isAddOpen && colleges.length === 0) {
+      apiClient('/colleges').then(setColleges).catch(() => setColleges([]))
+    }
+  }, [isAddOpen, colleges.length])
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -85,7 +92,7 @@ export default function AdminUsersDashboard() {
         body: JSON.stringify(formData)
       })
       setIsAddOpen(false)
-      setFormData({ name: '', email: '', role: 'STUDENT', password: '' })
+      setFormData({ name: '', email: '', role: 'STUDENT', password: '', collegeId: '' })
       fetchUsers()
       toast.success('User added successfully.')
     } catch (err: any) {
@@ -271,6 +278,22 @@ export default function AdminUsersDashboard() {
                     <option value="ADMIN">Admin</option>
                   </select>
                 </div>
+
+                {isAddOpen && (formData.role === 'STUDENT' || formData.role === 'TPO') && (
+                  <div>
+                    <label className="text-sm font-medium text-foreground/70 mb-1 block">College</label>
+                    <select required
+                      value={formData.collegeId}
+                      onChange={e => setFormData({ ...formData, collegeId: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-white/10 bg-zinc-900 text-white focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="" disabled>Select a college</option>
+                      {colleges.map((c: any) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/10">
                   <Button type="button" variant="outline" onClick={() => { setIsAddOpen(false); setEditingUser(null) }}>Cancel</Button>

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const PUBLIC_PATHS = ['/', '/login', '/signup', '/about', '/features', '/pricing', '/marketplace']
-const PROTECTED_PREFIXES = ['/dashboard', '/messages', '/student', '/client', '/recruiter', '/settings']
+const PROTECTED_PREFIXES = ['/dashboard', '/messages', '/student', '/client', '/recruiter', '/tpo', '/settings']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -45,6 +45,12 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/dashboard/' + roleCookie, request.url))
       }
       if (pathname.startsWith('/student') && roleCookie !== 'student') {
+        return NextResponse.redirect(new URL('/dashboard/' + roleCookie, request.url))
+      }
+      if (pathname.startsWith('/dashboard/tpo') && roleCookie !== 'tpo') {
+        return NextResponse.redirect(new URL('/dashboard/' + roleCookie, request.url))
+      }
+      if (pathname.startsWith('/tpo') && roleCookie !== 'tpo') {
         return NextResponse.redirect(new URL('/dashboard/' + roleCookie, request.url))
       }
     }

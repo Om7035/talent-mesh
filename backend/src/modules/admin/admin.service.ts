@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -65,13 +65,18 @@ export class AdminService {
   async createUser(adminUserId: string, data: any) {
     const bcrypt = require('bcryptjs');
     const passwordHash = await bcrypt.hash(data.password || 'TempPassword123!', 10);
-    
+    const role = data.role || 'STUDENT';
+
+    if ((role === 'STUDENT' || role === 'TPO') && !data.collegeId) {
+      throw new BadRequestException(`collegeId is required when creating a ${role} user.`);
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email: data.email,
           name: data.name,
-          role: data.role || 'STUDENT',
+          role,
           passwordHash,
           isActive: true
         }
@@ -80,6 +85,26 @@ export class AdminService {
       await tx.wallet.create({
         data: { userId: user.id, balance: 0 }
       });
+
+      if (role === 'STUDENT') {
+        await tx.student.create({
+          data: { userId: user.id, collegeId: data.collegeId, departmentId: data.departmentId ?? null }
+        });
+      } else if (role === 'TPO') {
+        await tx.tPO.create({
+          data: { userId: user.id, collegeId: data.collegeId, designation: data.designation ?? null }
+        });
+      } else if (role === 'CLIENT') {
+        await tx.client.create({
+          data: { userId: user.id, companyName: data.companyName ?? null, industry: data.industry ?? null }
+        });
+      } else if (role === 'RECRUITER') {
+        await tx.recruiter.create({
+          data: { userId: user.id, companyName: data.companyName ?? 'Independent Recruiter', industry: data.industry ?? null }
+        });
+      } else if (role === 'ADMIN') {
+        await tx.admin.create({ data: { userId: user.id, permissions: [] } });
+      }
 
       await tx.auditLog.create({
         data: {

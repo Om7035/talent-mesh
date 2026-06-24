@@ -36,8 +36,8 @@ export class AnalyticsController {
   }
 
   @Get('college/:collegeId')
-  @Roles(Role.TPO, Role.ADMIN, Role.RECRUITER)
-  @ApiOperation({ summary: 'Get college analytics by ID [TPO/ADMIN/RECRUITER]' })
+  @Roles(Role.TPO, Role.ADMIN, Role.RECRUITER, Role.CLIENT)
+  @ApiOperation({ summary: 'Get college analytics by ID [TPO/ADMIN/RECRUITER/CLIENT]' })
   getCollegeAnalyticsById(@Param('collegeId', ParseUUIDPipe) collegeId: string) {
     return this.analyticsService.getCollegeAnalytics(collegeId);
   }
