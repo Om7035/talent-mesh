@@ -10,7 +10,6 @@ import { Loader2, CreditCard, ArrowUpRight, ArrowDownLeft, Lock, Plus } from 'lu
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { useRazorpay } from 'react-razorpay'
 
 export default function ClientPaymentsPage() {
   const { user } = useRequireAuth()
@@ -20,8 +19,6 @@ export default function ClientPaymentsPage() {
   const [depositing, setDepositing] = useState(false)
   const [depositDialogOpen, setDepositDialogOpen] = useState(false)
   const [depositAmount, setDepositAmount] = useState('')
-  const [simulating, setSimulating] = useState(false)
-  const { Razorpay } = useRazorpay()
 
   const fetchWallet = () => {
     Promise.all([
@@ -47,86 +44,18 @@ export default function ClientPaymentsPage() {
 
     try {
       setDepositing(true)
-      
-      // 1. Create order on the backend
-      const order = await apiClient('/wallet/deposit-order', {
+      await apiClient('/wallet/direct-deposit', {
         method: 'POST',
         body: JSON.stringify({ amount })
       })
-
-      const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
-
-      // 2. Open Razorpay Checkout
-      const options = {
-        key: keyId || 'rzp_test_mockkey', // fallback for dev
-        amount: order.amount,
-        currency: order.currency,
-        name: 'TalentMesh',
-        description: 'Wallet Deposit',
-        order_id: order.orderId,
-        handler: async (response: any) => {
-          try {
-            // 3. Verify payment on the backend
-            await apiClient('/wallet/deposit-verify', {
-              method: 'POST',
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                amount
-              })
-            })
-
-            toast.success('Deposit successful! Your balance has been updated.')
-            setDepositDialogOpen(false)
-            setDepositAmount('')
-            fetchWallet()
-          } catch (err: any) {
-            toast.error(err.message || 'Payment verification failed')
-          }
-        },
-        prefill: {
-          name: user.name,
-          email: user.email,
-        },
-        theme: {
-          color: '#10b981', // emerald-500
-        },
-      }
-
-      const rzp = new Razorpay(options)
-      rzp.on('payment.failed', function (response: any) {
-        toast.error(response.error.description || 'Payment failed')
-      })
-      
-      rzp.open()
-      
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to initiate deposit')
-    } finally {
-      setDepositing(false)
-      setDepositDialogOpen(false)
-    }
-  }
-
-  const handleSimulateDeposit = async () => {
-    const amount = Number(depositAmount)
-    if (!amount || isNaN(amount) || amount <= 0) return
-
-    try {
-      setSimulating(true)
-      await apiClient('/wallet/simulate-deposit', {
-        method: 'POST',
-        body: JSON.stringify({ amount })
-      })
-      toast.success('Test funds added successfully!')
+      toast.success('Funds deposited successfully!')
       setDepositDialogOpen(false)
       setDepositAmount('')
       fetchWallet()
     } catch (err: any) {
-      toast.error(err.message || 'Failed to simulate deposit')
+      toast.error(err.message || 'Failed to deposit funds')
     } finally {
-      setSimulating(false)
+      setDepositing(false)
     }
   }
 
@@ -238,15 +167,11 @@ export default function ClientPaymentsPage() {
                 autoFocus
               />
             </div>
-            <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
-              <Button variant="outline" onClick={() => setDepositDialogOpen(false)} disabled={depositing || simulating} className="sm:mr-auto">Cancel</Button>
-              <Button onClick={handleSimulateDeposit} disabled={depositing || simulating || !depositAmount} variant="secondary" className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/20">
-                {simulating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Simulate (Test)
-              </Button>
-              <Button onClick={handleDeposit} disabled={depositing || simulating || !depositAmount} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={() => setDepositDialogOpen(false)} disabled={depositing}>Cancel</Button>
+              <Button onClick={handleDeposit} disabled={depositing || !depositAmount} className="bg-emerald-600 hover:bg-emerald-500 text-white">
                 {depositing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Pay via Razorpay
+                Deposit
               </Button>
             </DialogFooter>
           </DialogContent>

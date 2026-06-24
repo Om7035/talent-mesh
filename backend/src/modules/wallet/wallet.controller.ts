@@ -61,12 +61,11 @@ export class WalletController {
     return this.walletService.deposit(user.sub, amount, razorpay_payment_id);
   }
 
-  @Post('simulate-deposit')
+  @Post('direct-deposit')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Simulate a deposit for testing purposes without Razorpay' })
-  async simulateDeposit(@CurrentUser() user: JwtPayload, @Body() dto: DepositDto) {
-    // Generates a fake payment ID to bypass Razorpay completely for testing
-    const mockPaymentId = `sim_pay_${crypto.randomBytes(6).toString('hex')}`;
+  @ApiOperation({ summary: 'Direct deposit for testing and ease of use' })
+  async directDeposit(@CurrentUser() user: JwtPayload, @Body() dto: DepositDto) {
+    const mockPaymentId = `dep_${crypto.randomBytes(6).toString('hex')}`;
     return this.walletService.deposit(user.sub, dto.amount, mockPaymentId);
   }
 
