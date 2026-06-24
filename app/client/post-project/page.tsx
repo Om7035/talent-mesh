@@ -47,8 +47,19 @@ export default function PostProjectPage() {
     e.preventDefault()
     setError('')
 
-    if (!formData.title || !formData.description || !formData.budget || !formData.timelineDays || !formData.difficulty || !formData.category) {
-      setError('Please fill in all required fields.')
+    const missing: string[] = []
+    if (!formData.title) missing.push('Project Title')
+    if (!formData.description) missing.push('Project Description')
+    if (!formData.budget) missing.push('Budget')
+    if (!formData.timelineDays) missing.push('Timeline (Days)')
+    if (!formData.difficulty) missing.push('Difficulty Level')
+    if (!formData.category) missing.push('Category')
+
+    if (missing.length > 0) {
+      const message = `Missing required field${missing.length > 1 ? 's' : ''}: ${missing.join(', ')}`
+      setError(message)
+      toast.error(message)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
@@ -73,7 +84,10 @@ export default function PostProjectPage() {
       toast.success('Project posted successfully!')
       router.push('/client/projects')
     } catch (err: any) {
-      setError(err.message || 'Failed to post project.')
+      const message = err.message || 'Failed to post project.'
+      setError(message)
+      toast.error(message)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } finally {
       setSubmitting(false)
     }
@@ -116,7 +130,6 @@ export default function PostProjectPage() {
                 <label className="block text-sm font-medium mb-2">Project Title</label>
                 <input
                   type="text"
-                  required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g., Build an E-commerce Platform"
@@ -127,7 +140,6 @@ export default function PostProjectPage() {
               <div>
                 <label className="block text-sm font-medium mb-2">Project Description</label>
                 <textarea
-                  required
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Describe your project in detail..."
@@ -143,7 +155,6 @@ export default function PostProjectPage() {
                     <span className="px-4 py-2 rounded-l-lg border border-r-0 border-border bg-muted">₹</span>
                     <input
                       type="number"
-                      required
                       min="1"
                       value={formData.budget}
                       onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
@@ -157,7 +168,6 @@ export default function PostProjectPage() {
                   <label className="block text-sm font-medium mb-2">Timeline (Days)</label>
                   <input
                     type="number"
-                    required
                     min="1"
                     max="365"
                     value={formData.timelineDays}
@@ -171,7 +181,6 @@ export default function PostProjectPage() {
               <div>
                 <label className="block text-sm font-medium mb-2">Difficulty Level</label>
                 <select
-                  required
                   value={formData.difficulty}
                   onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
                   className="w-full px-4 py-2 rounded-lg border border-border bg-card focus:outline-none focus:ring-2 focus:ring-accent"
@@ -239,7 +248,6 @@ export default function PostProjectPage() {
               <div>
                 <label className="block text-sm font-medium mb-2">Category</label>
                 <select
-                  required
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full px-4 py-2 rounded-lg border border-border bg-card focus:outline-none focus:ring-2 focus:ring-accent"
