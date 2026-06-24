@@ -256,4 +256,36 @@ export class TpoService {
   async generateReport(tpoUserId: string) {
     return this.getCollegeAnalyticsSummary(tpoUserId);
   }
+
+  async getHiringClients(tpoUserId: string) {
+    const tpo = await this.prisma.tPO.findUnique({ where: { userId: tpoUserId } });
+    if (!tpo) throw new ForbiddenException();
+
+    const contracts = await this.prisma.contract.findMany({
+      where: { student: { collegeId: tpo.collegeId } },
+      include: {
+        project: {
+          include: { client: { include: { user: { select: { name: true, avatarUrl: true } } } } },
+        },
+      },
+      distinct: ['projectId'], // dedupe if a client hired multiple students from this college
+    });
+
+    const seen = new Map();
+    for (const c of contracts) {
+      const client = c.project.client;
+      if (!seen.has(client.id)) {
+        seen.set(client.id, {
+          id: client.id,
+          name: client.user.name,
+          avatarUrl: client.user.avatarUrl,
+          companyName: client.companyName,
+          industry: client.industry,
+          projectsHired: 0,
+        });
+      }
+      seen.get(client.id).projectsHired += 1;
+    }
+    return Array.from(seen.values());
+  }
 }

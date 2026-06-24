@@ -95,4 +95,10 @@ export class TpoController {
   ) {
     return this.tpoService.recommendStudentForProject(user.sub, studentId, projectId, message);
   }
+
+  @Get('hiring-clients')
+  @ApiOperation({ summary: 'Get clients hiring from this college [TPO]' })
+  getHiringClients(@CurrentUser() user: JwtPayload) {
+    return this.tpoService.getHiringClients(user.sub);
+  }
 }

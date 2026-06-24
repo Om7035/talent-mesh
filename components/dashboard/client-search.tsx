@@ -29,15 +29,10 @@ export function ClientSearch({ role, title, description }: { role: string; title
   useEffect(() => {
     if (user && user.role === 'ADMIN') {
       fetchClients()
-    } else {
-      // If TPO, we can use same API if authorized, or just display empty if TPO doesn't have access.
-      // Assuming TPO might not have /admin/users access.
-      setLoading(false)
     }
   }, [user])
 
   const handleSearch = async () => {
-    if (user?.role !== 'ADMIN') return
     setSearching(true)
     try {
       const res = await apiClient(`/admin/users?role=CLIENT&search=${encodeURIComponent(searchQuery)}&limit=20`)
@@ -68,27 +63,25 @@ export function ClientSearch({ role, title, description }: { role: string; title
         </div>
 
         {/* Search */}
-        {user.role === 'ADMIN' && (
-          <Card glass>
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
-                  <input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder="Search clients by name or company..."
-                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50"
-                  />
-                </div>
-                <Button onClick={handleSearch} disabled={searching} className="h-[46px] px-8 bg-blue-600 hover:bg-blue-500">
-                  {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
-                </Button>
+        <Card glass>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="Search clients by name or company..."
+                  className="w-full pl-9 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                />
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <Button onClick={handleSearch} disabled={searching} className="h-[46px] px-8 bg-blue-600 hover:bg-blue-500">
+                {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Clients Grid */}
         <Card glass>

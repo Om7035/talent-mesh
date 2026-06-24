@@ -1,5 +1,5 @@
-import { ClientSearch } from '@/components/dashboard/client-search'
+import { TpoHiringClients } from '@/components/dashboard/tpo-hiring-clients'
 
 export default function TPOClients() {
-  return <ClientSearch role="tpo" title="Clients Directory" description="View companies hiring from your college" />
+  return <TpoHiringClients />
 }
