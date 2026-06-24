@@ -147,31 +147,34 @@ export default function ClientDashboard() {
               ) : (
                 <div className="space-y-4">
                   {projects.map((project) => (
-                    <div key={project.id} className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div key={project.id} className="group relative p-5 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1">
+                      {/* Animated glowing border effect on hover */}
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/0 via-emerald-500/0 to-teal-500/0 group-hover:from-emerald-500/20 group-hover:via-teal-500/20 group-hover:to-emerald-500/20 opacity-0 group-hover:opacity-100 transition-all duration-500 -z-10 blur-md" />
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-foreground">{project.title}</h3>
-                          <p className="text-xs text-foreground/50 mt-1 line-clamp-1">{project.description}</p>
+                          <h3 className="font-semibold text-foreground text-lg group-hover:text-emerald-400 transition-colors">{project.title}</h3>
+                          <p className="text-sm text-foreground/50 mt-1 line-clamp-1">{project.description}</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
-                            project.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                            project.status === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                            'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        <div className="flex items-center gap-4">
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border shadow-sm ${
+                            project.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-emerald-500/20' :
+                            project.status === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30 shadow-blue-500/20' :
+                            'bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-amber-500/20'
                           }`}>
                             {project.status.replace('_', ' ')}
                           </span>
-                          <span className="font-semibold text-foreground">₹{project.budget?.toLocaleString()}</span>
+                          <span className="font-bold text-foreground text-lg tracking-tight">₹{project.budget?.toLocaleString()}</span>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs pt-3 border-t border-white/5 text-foreground/60">
-                        <div className="flex items-center gap-4">
-                          <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {(project.applications || []).length} applicants</span>
-                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {project.timelineDays ? `${project.timelineDays} days` : 'Flexible'}</span>
+                      <div className="flex items-center justify-between text-xs pt-4 border-t border-white/10 text-foreground/60">
+                        <div className="flex items-center gap-5">
+                          <span className="flex items-center gap-2 bg-white/5 px-2.5 py-1.5 rounded-lg"><Eye className="w-4 h-4 text-emerald-400/70" /> <span className="font-medium">{(project.applications || []).length} applicants</span></span>
+                          <span className="flex items-center gap-2 bg-white/5 px-2.5 py-1.5 rounded-lg"><Clock className="w-4 h-4 text-emerald-400/70" /> <span className="font-medium">{project.timelineDays ? `${project.timelineDays} days` : 'Flexible'}</span></span>
                         </div>
                         <Link href={`/client/projects/${project.id}`}>
-                          <Button variant="outline" size="sm" className="h-7 text-xs border-white/10">Manage</Button>
+                          <Button variant="outline" size="sm" className="h-8 text-xs border-white/20 bg-transparent hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm">Manage Project</Button>
                         </Link>
                       </div>
                     </div>

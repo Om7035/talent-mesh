@@ -159,8 +159,8 @@ export default function StudentDashboard() {
                   { label: 'Messages', href: '/messages', icon: <MessageSquare className="w-4 h-4" />, color: 'from-emerald-500/20 to-emerald-600/10' },
                   { label: 'Leaderboard', href: '/student/leaderboard', icon: <Trophy className="w-4 h-4" />, color: 'from-amber-500/20 to-amber-600/10' },
                 ].map(action => (
-                  <Link key={action.label} href={action.href} className={`p-4 rounded-xl border border-white/5 bg-gradient-to-br ${action.color} hover:border-white/10 transition-all text-center group`}>
-                    <div className="text-foreground/60 group-hover:text-foreground transition-colors flex justify-center mb-2">{action.icon}</div>
+                  <Link key={action.label} href={action.href} className={`p-4 rounded-xl border border-white/5 bg-gradient-to-br ${action.color} hover:border-white/10 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 transition-all text-center group`}>
+                    <div className="text-foreground/60 group-hover:text-foreground transition-colors flex justify-center mb-2 group-hover:scale-110 duration-300">{action.icon}</div>
                     <p className="text-xs font-medium text-foreground/80 group-hover:text-foreground transition-colors">{action.label}</p>
                   </Link>
                 ))}
@@ -190,12 +190,30 @@ export default function StudentDashboard() {
                     {skillData.length > 0 && (
                       <ResponsiveContainer width="100%" height={180}>
                         <PieChart>
+                          <defs>
+                            <linearGradient id="colorSkill0" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#2563eb" stopOpacity={0.8}/>
+                            </linearGradient>
+                            <linearGradient id="colorSkill1" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.8}/>
+                            </linearGradient>
+                            <linearGradient id="colorSkill2" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#ec4899" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#db2777" stopOpacity={0.8}/>
+                            </linearGradient>
+                            <linearGradient id="colorSkill3" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#06b6d4" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#0891b2" stopOpacity={0.8}/>
+                            </linearGradient>
+                          </defs>
                           <Pie data={skillData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value" stroke="none">
                             {skillData.map((_: any, index: number) => (
-                              <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                              <Cell key={index} fill={`url(#colorSkill${index % 4})`} />
                             ))}
                           </Pie>
-                          <Tooltip contentStyle={{ backgroundColor: '#000', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+                          <Tooltip contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }} />
                         </PieChart>
                       </ResponsiveContainer>
                     )}
@@ -235,16 +253,16 @@ export default function StudentDashboard() {
                 ) : (
                   <div className="space-y-3">
                     {projects.slice(0, 5).map((app: any, idx: number) => (
-                      <div key={app.id || idx} className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all">
+                      <div key={app.id || idx} className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:-translate-y-0.5 hover:border-white/10 hover:shadow-md hover:shadow-white/5 transition-all cursor-pointer">
                         <div>
                           <p className="text-sm font-medium text-foreground">{app.project?.title || 'Project'}</p>
                           <p className="text-xs text-foreground/50">{app.project?.client?.companyName || 'Client'} · ₹{app.project?.budget?.toLocaleString()}</p>
                         </div>
                         <span className={`text-[10px] uppercase tracking-wider font-medium px-2.5 py-1 rounded-full border ${
-                          app.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                          app.status === 'REJECTED' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                          app.status === 'SHORTLISTED' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                          'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                          app.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]' :
+                          app.status === 'REJECTED' ? 'bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]' :
+                          app.status === 'SHORTLISTED' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]' :
+                          'bg-yellow-500/10 text-yellow-400 border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.2)]'
                         }`}>
                           {app.status}
                         </span>

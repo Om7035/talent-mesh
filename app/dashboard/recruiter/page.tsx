@@ -151,11 +151,14 @@ export default function RecruiterDashboard() {
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {candidates.map((candidate) => (
-                    <div key={candidate.id} className="p-5 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all group">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                    <div key={candidate.id} className="relative p-5 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:scale-[1.02] hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 hover:border-purple-500/30 transition-all duration-300 group overflow-hidden">
+                      {/* Subtle gradient glow in background */}
+                      <div className="absolute -top-20 -right-20 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                      
+                      <div className="relative flex items-start gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg shadow-violet-500/20 group-hover:shadow-violet-500/40 transition-shadow">
                           {candidate.user?.avatarUrl ? (
-                            <img src={candidate.user.avatarUrl} alt={candidate.user.name} className="w-full h-full rounded-xl object-cover" />
+                            <img src={candidate.user.avatarUrl} alt={candidate.user.name} className="w-full h-full rounded-2xl object-cover" />
                           ) : (
                             candidate.user?.name?.split(' ').map((n:string) => n[0]).join('').slice(0,2) || '?'
                           )}
@@ -163,21 +166,21 @@ export default function RecruiterDashboard() {
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="font-semibold text-foreground truncate">{candidate.user?.name}</h3>
-                              <p className="text-sm text-foreground/60 truncate">{candidate.major || 'Student'}</p>
+                              <h3 className="font-semibold text-foreground text-base truncate group-hover:text-purple-300 transition-colors">{candidate.user?.name}</h3>
+                              <p className="text-sm text-foreground/60 truncate mt-0.5">{candidate.major || 'Student'}</p>
                             </div>
                             {candidate.reputationScore > 0 && (
-                              <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-2 py-0.5 rounded-full border border-yellow-500/20 text-xs font-bold">
-                                <Star className="w-3 h-3 fill-yellow-500" />
+                              <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-2.5 py-1 rounded-full border border-yellow-500/20 text-xs font-bold shadow-[0_0_10px_rgba(234,179,8,0.15)]">
+                                <Star className="w-3.5 h-3.5 fill-yellow-500" />
                                 {(candidate.reputationScore / 20).toFixed(1)}
                               </div>
                             )}
                             {candidate.clusterTier && (
-                              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-bold ${
-                                candidate.clusterTier === 'ELITE' ? 'bg-amber-400/10 text-amber-400 border-amber-400/20 shadow-sm shadow-amber-400/10' :
-                                candidate.clusterTier === 'RISING_TALENT' ? 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20 shadow-sm shadow-emerald-400/10' :
-                                candidate.clusterTier === 'PROFESSIONAL' ? 'bg-blue-400/10 text-blue-400 border-blue-400/20 shadow-sm shadow-blue-400/10' :
-                                'bg-slate-400/10 text-slate-400 border-slate-400/20'
+                              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] uppercase tracking-wider font-bold shadow-sm ${
+                                candidate.clusterTier === 'ELITE' ? 'bg-amber-400/10 text-amber-400 border-amber-400/30 shadow-[0_0_10px_rgba(251,191,36,0.15)]' :
+                                candidate.clusterTier === 'RISING_TALENT' ? 'bg-emerald-400/10 text-emerald-400 border-emerald-400/30 shadow-[0_0_10px_rgba(52,211,153,0.15)]' :
+                                candidate.clusterTier === 'PROFESSIONAL' ? 'bg-blue-400/10 text-blue-400 border-blue-400/30 shadow-[0_0_10px_rgba(96,165,250,0.15)]' :
+                                'bg-slate-400/10 text-slate-400 border-slate-400/30'
                               }`}>
                                 {candidate.clusterTier === 'ELITE' && '🏆 '}
                                 {candidate.clusterTier === 'RISING_TALENT' && '🚀 '}
@@ -188,47 +191,47 @@ export default function RecruiterDashboard() {
                             )}
                           </div>
 
-                          <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-xs text-foreground/50">
+                          <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 text-xs text-foreground/60">
                             {candidate.college?.name && (
-                              <div className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> <span className="truncate max-w-[120px]">{candidate.college.name}</span></div>
+                              <div className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5 text-purple-400/70" /> <span className="truncate max-w-[120px] font-medium">{candidate.college.name}</span></div>
                             )}
                             {candidate.location && (
-                              <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> <span className="truncate max-w-[100px]">{candidate.location}</span></div>
+                              <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-purple-400/70" /> <span className="truncate max-w-[100px] font-medium">{candidate.location}</span></div>
                             )}
-                            <div className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> {candidate.projectsCompleted || 0} projects</div>
+                            <div className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5 text-purple-400/70" /> <span className="font-medium">{candidate.projectsCompleted || 0} projects</span></div>
                           </div>
 
                           {candidate.skills && candidate.skills.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mt-4">
+                            <div className="flex flex-wrap gap-1.5 mt-5">
                               {candidate.skills.slice(0, 4).map((s: any) => (
-                                <span key={s.skillId} className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded bg-white/5 border border-white/10 text-foreground/70">
+                                <span key={s.skillId} className="text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-lg bg-white/10 border border-white/5 text-foreground/80 hover:bg-purple-500/20 hover:text-purple-300 transition-colors cursor-default">
                                   {s.skill?.name}
                                 </span>
                               ))}
                               {candidate.skills.length > 4 && (
-                                <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded bg-white/5 border border-white/10 text-foreground/50">
+                                <span className="text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-foreground/50">
                                   +{candidate.skills.length - 4}
                                 </span>
                               )}
                             </div>
                           )}
 
-                          <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-white/5">
+                          <div className="flex items-center justify-end gap-3 mt-5 pt-5 border-t border-white/10">
                             <Button
-                              variant="outline" size="sm" className="h-8 text-xs border-white/10 bg-transparent hover:bg-white/5"
+                              variant="outline" size="sm" className="h-8 text-xs border-white/20 bg-transparent hover:bg-white/10 hover:border-white/30"
                               onClick={() => handleShortlist(candidate.id)}
                               disabled={shortlistingId === candidate.id}
                             >
                               {shortlistingId === candidate.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Shortlist'}
                             </Button>
                             <Button
-                              variant="outline" size="sm" className="h-8 text-xs border-white/10 bg-transparent hover:bg-white/5"
+                              variant="outline" size="sm" className="h-8 text-xs border-white/20 bg-transparent hover:bg-white/10 hover:border-white/30"
                               onClick={() => setViewingCandidate(candidate)}
                             >
                               View Profile
                             </Button>
                             <Link href="/messages">
-                              <Button size="sm" className="h-8 text-xs bg-purple-600 hover:bg-purple-500">Contact</Button>
+                              <Button size="sm" className="h-8 text-xs bg-purple-600 hover:bg-purple-500 shadow-sm shadow-purple-500/20">Contact</Button>
                             </Link>
                           </div>
                         </div>

@@ -67,7 +67,7 @@ export default function AdminDashboard() {
 
             {/* Moderation Queue (real open disputes) */}
             <motion.div variants={itemVariants}>
-              <Card>
+              <Card glass>
                 <CardHeader>
                   <CardTitle>Moderation Queue</CardTitle>
                   <CardDescription>Open disputes awaiting resolution</CardDescription>
@@ -78,14 +78,14 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="space-y-3">
                       {disputes.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                        <div key={item.id} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:-translate-y-0.5 transition-all hover:border-white/10 hover:shadow-md cursor-pointer">
                           <div className="flex-1">
-                            <h4 className="font-semibold text-sm">{item.contract?.id ? `Contract ${item.contract.id.slice(0, 8)}…` : 'Dispute'}</h4>
-                            <p className="text-xs text-foreground/60">{item.reason}</p>
+                            <h4 className="font-semibold text-sm text-foreground">{item.contract?.id ? `Contract ${item.contract.id.slice(0, 8)}…` : 'Dispute'}</h4>
+                            <p className="text-xs text-foreground/60 mt-0.5">{item.reason}</p>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className="text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">{item.status}</span>
-                            <Link href={`/admin/disputes?id=${item.id}`} className="text-xs bg-accent text-accent-foreground px-3 py-1 rounded hover:opacity-90 transition-opacity">
+                            <span className="text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.15)]">{item.status}</span>
+                            <Link href={`/admin/disputes?id=${item.id}`} className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg shadow-sm shadow-blue-500/20 transition-all hover:shadow-md hover:shadow-blue-500/30">
                               Review
                             </Link>
                           </div>
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
 
             {/* Recent Audit Log */}
             <motion.div variants={itemVariants}>
-              <Card>
+              <Card glass>
                 <CardHeader>
                   <CardTitle>Recent Admin Activity</CardTitle>
                   <CardDescription>Latest actions logged on the platform</CardDescription>
@@ -110,12 +110,12 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="space-y-3">
                       {auditLogs.map((log) => (
-                        <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
+                        <div key={log.id} className="flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
                           <div className="flex-1">
-                            <h4 className="font-semibold text-sm">{log.action.replace(/_/g, ' ')}</h4>
-                            <p className="text-xs text-foreground/60">{log.user?.name || 'System'} · {log.resource}</p>
+                            <h4 className="font-semibold text-sm text-foreground">{log.action.replace(/_/g, ' ')}</h4>
+                            <p className="text-xs text-foreground/50 mt-0.5">{log.user?.name || 'System'} · {log.resource}</p>
                           </div>
-                          <span className="text-xs text-foreground/40">{new Date(log.createdAt).toLocaleString()}</span>
+                          <span className="text-xs text-foreground/40 px-2.5 py-1 rounded-lg bg-white/5">{new Date(log.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                       ))}
                     </div>
