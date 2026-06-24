@@ -5,8 +5,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { Users, Target, TrendingUp, CheckCircle, Star, MapPin, Search, Loader2, BookOpen, Briefcase } from 'lucide-react'
+import { Users, Target, Star, MapPin, Search, Loader2, BookOpen, Briefcase, X, Mail, Phone, Github, Linkedin, Globe } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
@@ -14,24 +13,28 @@ import Link from 'next/link'
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }
 const itemVariants = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }
-const COLORS = ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b']
 
 export default function RecruiterDashboard() {
   const { user, isLoading: authLoading } = useRequireAuth()
   const [profile, setProfile] = useState<any>(null)
   const [candidates, setCandidates] = useState<any[]>([])
+  const [shortlistedCount, setShortlistedCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
+  const [viewingCandidate, setViewingCandidate] = useState<any>(null)
+  const [shortlistingId, setShortlistingId] = useState<string | null>(null)
 
   const fetchProfileAndCandidates = async () => {
     try {
-      const [p, c] = await Promise.all([
+      const [p, c, a] = await Promise.all([
         apiClient('/recruiters/me').catch(() => null),
         apiClient('/students/search?limit=10'),
+        apiClient('/recruiters/analytics').catch(() => null),
       ])
       setProfile(p)
       setCandidates(Array.isArray(c?.data) ? c.data : [])
+      setShortlistedCount(a?.shortlistedCount ?? 0)
     } catch (err) {
       console.error(err)
     } finally {
@@ -55,6 +58,18 @@ export default function RecruiterDashboard() {
     }
   }
 
+  const handleShortlist = async (studentId: string) => {
+    setShortlistingId(studentId)
+    try {
+      await apiClient(`/recruiters/shortlist/${studentId}`, { method: 'POST' })
+      setShortlistedCount((c) => c + 1)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setShortlistingId(null)
+    }
+  }
+
   if (authLoading || (!user && !profile)) {
     return (
       <DashboardLayout role="recruiter">
@@ -63,25 +78,10 @@ export default function RecruiterDashboard() {
     )
   }
 
-  const chartData = [
-    { month: 'Jan', views: 40, searches: 20 },
-    { month: 'Feb', views: 60, searches: 35 },
-    { month: 'Mar', views: 80, searches: 50 },
-    { month: 'Apr', views: 120, searches: 75 },
-    { month: 'May', views: 150, searches: 95 },
-  ]
-
-  const hiringPipelineData = [
-    { name: 'Sourced', value: candidates.length * 5 || 35 },
-    { name: 'Contacted', value: candidates.length * 2 || 18 },
-    { name: 'Interviewed', value: 8 },
-    { name: 'Hired', value: 3 },
-  ]
-
   return (
     <DashboardLayout role="recruiter">
       <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
-        
+
         {/* Header */}
         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -95,26 +95,15 @@ export default function RecruiterDashboard() {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button size="sm" className="bg-purple-600 hover:bg-purple-500 text-xs">
-              <Target className="w-3.5 h-3.5 mr-1.5" /> Saved Searches
-            </Button>
-          </div>
         </motion.div>
 
         {/* Stats Grid */}
-        <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div variants={containerVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
           <motion.div variants={itemVariants}>
-            <StatCard title="Candidates Viewed" value={loading ? '—' : '284'} description="This month" icon={<Users className="w-5 h-5 text-purple-400" />} trend={{ value: 42, direction: 'up' }} />
+            <StatCard title="Candidates Found" value={loading ? '—' : String(candidates.length)} description="Current search" icon={<Users className="w-5 h-5 text-purple-400" />} />
           </motion.div>
           <motion.div variants={itemVariants}>
-            <StatCard title="Shortlisted" value={loading ? '—' : '35'} description="Top matches" icon={<Target className="w-5 h-5 text-purple-400" />} />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <StatCard title="Offers Sent" value={loading ? '—' : '8'} description="Active offers" icon={<TrendingUp className="w-5 h-5 text-purple-400" />} />
-          </motion.div>
-          <motion.div variants={itemVariants}>
-            <StatCard title="Hired" value={loading ? '—' : '5'} description="This quarter" icon={<CheckCircle className="w-5 h-5 text-purple-400" />} />
+            <StatCard title="Shortlisted" value={loading ? '—' : String(shortlistedCount)} description="All time" icon={<Target className="w-5 h-5 text-purple-400" />} />
           </motion.div>
         </motion.div>
 
@@ -225,8 +214,22 @@ export default function RecruiterDashboard() {
                           )}
 
                           <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-white/5">
-                            <Button variant="outline" size="sm" className="h-8 text-xs border-white/10 bg-transparent hover:bg-white/5">View Profile</Button>
-                            <Button size="sm" className="h-8 text-xs bg-purple-600 hover:bg-purple-500">Contact</Button>
+                            <Button
+                              variant="outline" size="sm" className="h-8 text-xs border-white/10 bg-transparent hover:bg-white/5"
+                              onClick={() => handleShortlist(candidate.id)}
+                              disabled={shortlistingId === candidate.id}
+                            >
+                              {shortlistingId === candidate.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Shortlist'}
+                            </Button>
+                            <Button
+                              variant="outline" size="sm" className="h-8 text-xs border-white/10 bg-transparent hover:bg-white/5"
+                              onClick={() => setViewingCandidate(candidate)}
+                            >
+                              View Profile
+                            </Button>
+                            <Link href="/messages">
+                              <Button size="sm" className="h-8 text-xs bg-purple-600 hover:bg-purple-500">Contact</Button>
+                            </Link>
                           </div>
                         </div>
                       </div>
@@ -238,59 +241,77 @@ export default function RecruiterDashboard() {
           </Card>
         </motion.div>
 
-        {/* Charts Grid */}
-        <motion.div variants={containerVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <motion.div variants={itemVariants} className="lg:col-span-2">
-            <Card glass>
-              <CardHeader>
-                <CardTitle>Sourcing Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" fontSize={12} />
-                    <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} />
-                    <Tooltip contentStyle={{ backgroundColor: '#000', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
-                    <Line type="monotone" dataKey="views" stroke="#a855f7" strokeWidth={3} />
-                    <Line type="monotone" dataKey="searches" stroke="#06b6d4" strokeWidth={3} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <Card glass>
-              <CardHeader>
-                <CardTitle>Pipeline</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie data={hiringPipelineData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
-                      {hiringPipelineData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#000', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-1.5 mt-2">
-                  {hiringPipelineData.map((stage, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
-                        <span className="text-foreground/70">{stage.name}</span>
-                      </div>
-                      <span className="font-bold">{stage.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </motion.div>
-
       </motion.div>
+
+      {/* Candidate Detail Modal */}
+      {viewingCandidate && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-lg border-white/10 bg-background shadow-2xl max-h-[85vh] overflow-y-auto">
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                  {viewingCandidate.user?.avatarUrl ? (
+                    <img src={viewingCandidate.user.avatarUrl} alt={viewingCandidate.user.name} className="w-full h-full rounded-xl object-cover" />
+                  ) : (
+                    viewingCandidate.user?.name?.split(' ').map((n:string) => n[0]).join('').slice(0,2) || '?'
+                  )}
+                </div>
+                <div>
+                  <CardTitle>{viewingCandidate.user?.name}</CardTitle>
+                  <CardDescription>{viewingCandidate.major || 'Student'} · {viewingCandidate.college?.name}</CardDescription>
+                </div>
+              </div>
+              <button onClick={() => setViewingCandidate(null)} className="text-foreground/50 hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {viewingCandidate.bio && <p className="text-sm text-foreground/70">{viewingCandidate.bio}</p>}
+
+              <div className="flex flex-wrap gap-3 text-sm text-foreground/60">
+                {viewingCandidate.location && <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {viewingCandidate.location}</span>}
+                <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4" /> {viewingCandidate.projectsCompleted || 0} projects completed</span>
+                {viewingCandidate.reputationScore > 0 && (
+                  <span className="flex items-center gap-1.5"><Star className="w-4 h-4 fill-yellow-400 text-yellow-400" /> {(viewingCandidate.reputationScore / 20).toFixed(1)} reputation</span>
+                )}
+              </div>
+
+              {(viewingCandidate.githubUrl || viewingCandidate.linkedinUrl || viewingCandidate.portfolioUrl) && (
+                <div className="flex flex-wrap gap-3 text-sm">
+                  {viewingCandidate.githubUrl && <a href={viewingCandidate.githubUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-blue-400 hover:underline"><Github className="w-4 h-4" /> GitHub</a>}
+                  {viewingCandidate.linkedinUrl && <a href={viewingCandidate.linkedinUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-blue-400 hover:underline"><Linkedin className="w-4 h-4" /> LinkedIn</a>}
+                  {viewingCandidate.portfolioUrl && <a href={viewingCandidate.portfolioUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-blue-400 hover:underline"><Globe className="w-4 h-4" /> Portfolio</a>}
+                </div>
+              )}
+
+              {viewingCandidate.skills && viewingCandidate.skills.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-foreground/50 uppercase tracking-wider mb-2">Skills</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewingCandidate.skills.map((s: any) => (
+                      <span key={s.skillId} className="text-xs uppercase tracking-wider font-semibold px-2 py-1 rounded bg-white/5 border border-white/10 text-foreground/70">
+                        {s.skill?.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline" className="flex-1"
+                  onClick={() => { handleShortlist(viewingCandidate.id); setViewingCandidate(null) }}
+                >
+                  Shortlist
+                </Button>
+                <Link href="/messages" className="flex-1">
+                  <Button className="w-full bg-purple-600 hover:bg-purple-500">Contact</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </DashboardLayout>
   )
 }

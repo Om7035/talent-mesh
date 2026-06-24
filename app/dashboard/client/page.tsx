@@ -11,6 +11,7 @@ import { motion } from 'framer-motion'
 import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
 import Link from 'next/link'
+import Link from 'next/link'
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } }
 const itemVariants = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }
@@ -91,9 +92,11 @@ export default function ClientDashboard() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-xs">
-              <Plus className="w-3.5 h-3.5 mr-1.5" /> Post New Project
-            </Button>
+            <Link href="/client/post-project">
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-xs">
+                <Plus className="w-3.5 h-3.5 mr-1.5" /> Post New Project
+              </Button>
+            </Link>
           </div>
         </motion.div>
 
@@ -148,7 +151,9 @@ export default function ClientDashboard() {
                 <div className="text-center py-12">
                   <Briefcase className="w-10 h-10 text-foreground/20 mx-auto mb-3" />
                   <p className="text-foreground/60 mb-4">You haven't posted any projects yet.</p>
-                  <Button className="bg-emerald-600 hover:bg-emerald-500">Post Your First Project</Button>
+                  <Link href="/client/post-project">
+                    <Button className="bg-emerald-600 hover:bg-emerald-500">Post Your First Project</Button>
+                  </Link>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -174,9 +179,11 @@ export default function ClientDashboard() {
                       <div className="flex items-center justify-between text-xs pt-3 border-t border-white/5 text-foreground/60">
                         <div className="flex items-center gap-4">
                           <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {(project.applications || []).length} applicants</span>
-                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {project.duration || 'Flexible'}</span>
+                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {project.timelineDays ? `${project.timelineDays} days` : 'Flexible'}</span>
                         </div>
-                        <Button variant="outline" size="sm" className="h-7 text-xs border-white/10">Manage</Button>
+                        <Link href={`/client/projects/${project.id}`}>
+                          <Button variant="outline" size="sm" className="h-7 text-xs border-white/10">Manage</Button>
+                        </Link>
                       </div>
                     </div>
                   ))}
