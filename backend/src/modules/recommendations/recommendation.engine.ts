@@ -195,6 +195,104 @@ export class RecommendationEngine {
   }
 
   /**
+   * Generate and store top-N student matches for a project (client/recruiter view).
+   * Mirrors generateForStudent but scores all verified students against one project.
+   */
+  async generateForProject(projectId: string): Promise<void> {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      include: { skills: { include: { skill: true } } },
+    });
+    if (!project) return;
+
+    const projectSkillIds = new Set(project.skills.map((s) => s.skillId));
+    const projectDifficultyWeight = RecommendationEngine.DIFFICULTY_WEIGHTS[project.difficulty] ?? 2;
+
+    const students = await this.prisma.student.findMany({
+      where: { isActive: true, verificationStatus: 'VERIFIED' },
+      include: {
+        skills: { include: { skill: true } },
+        contracts: {
+          where: { status: { in: ['COMPLETED', 'RELEASED'] } },
+          include: { project: { select: { difficulty: true } } },
+          take: 20,
+        },
+      },
+    });
+
+    const recommendations: Array<{
+      studentId: string;
+      projectId: string;
+      matchScore: number;
+      skillMatchScore: number;
+      reputationScore: number;
+      difficultyScore: number;
+    }> = [];
+
+    for (const student of students) {
+      const studentSkillIds = new Set(student.skills.map((s) => s.skillId));
+      const studentReputationNormalized = student.reputationScore / 100;
+
+      const intersection = [...studentSkillIds].filter((id) => projectSkillIds.has(id)).length;
+      const union = new Set([...studentSkillIds, ...projectSkillIds]).size;
+      const skillOverlap = union > 0 ? intersection / union : 0;
+
+      const completedDifficulties = student.contracts.map(
+        (c) => RecommendationEngine.DIFFICULTY_WEIGHTS[c.project.difficulty] ?? 2,
+      );
+      const avgStudentDifficulty =
+        completedDifficulties.length > 0
+          ? completedDifficulties.reduce((a, b) => a + b, 0) / completedDifficulties.length
+          : 2;
+      const difficultyDistance = Math.abs(avgStudentDifficulty - projectDifficultyWeight);
+      const difficultyScore = Math.max(0, 1 - difficultyDistance / 3);
+
+      let tierBonus = 0;
+      if (student.clusterTier === 'ELITE') tierBonus = 0.15;
+      else if (student.clusterTier === 'PROFESSIONAL') tierBonus = 0.10;
+      else if (student.clusterTier === 'RISING_TALENT') tierBonus = 0.05;
+
+      const rawScore =
+        (RecommendationEngine.WEIGHTS.skillOverlap * skillOverlap) +
+        (RecommendationEngine.WEIGHTS.reputation * studentReputationNormalized) +
+        (RecommendationEngine.WEIGHTS.difficultyCompatibility * difficultyScore) +
+        tierBonus;
+
+      const matchScore = Math.round(rawScore * 100 * 100) / 100;
+
+      if (matchScore > 10) {
+        recommendations.push({
+          studentId: student.id,
+          projectId,
+          matchScore,
+          skillMatchScore: Math.round(skillOverlap * 100 * 100) / 100,
+          reputationScore: Math.round(studentReputationNormalized * 100 * 100) / 100,
+          difficultyScore: Math.round(difficultyScore * 100 * 100) / 100,
+        });
+      }
+    }
+
+    if (recommendations.length > 0) {
+      await Promise.all(
+        recommendations.map((rec) =>
+          this.prisma.recommendation.upsert({
+            where: { studentId_projectId: { studentId: rec.studentId, projectId: rec.projectId } },
+            create: rec,
+            update: {
+              matchScore: rec.matchScore,
+              skillMatchScore: rec.skillMatchScore,
+              reputationScore: rec.reputationScore,
+              difficultyScore: rec.difficultyScore,
+              updatedAt: new Date(),
+            },
+          }),
+        ),
+      );
+      this.logger.debug(`Generated ${recommendations.length} candidate matches for project: ${projectId}`);
+    }
+  }
+
+  /**
    * Get top-N student recommendations for a project (recruiter/client view).
    */
   async getForProject(projectId: string, limit = 10) {

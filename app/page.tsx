@@ -273,11 +273,6 @@ export default function Page() {
                       Features
                     </Link>
                   </li>
-                  <li>
-                    <Link href="/pricing" className="text-foreground/70 hover:text-accent transition-colors font-normal">
-                      Pricing
-                    </Link>
-                  </li>
                 </ul>
               </div>
               <div className="col-span-1">

@@ -4,6 +4,7 @@ import { QUEUE_NAMES } from '../../common/constants/queues.constants';
 import { ReputationEngine } from './reputation.engine';
 import { ReputationWorker } from './reputation.worker';
 import { RecommendationEngine } from './recommendation.engine';
+import { RecommendationsWorker } from './recommendations.worker';
 import { ClusteringService } from './clustering.service';
 import { RecommendationsController } from './recommendations.controller';
 
@@ -18,6 +19,7 @@ import { RecommendationsController } from './recommendations.controller';
     ReputationEngine,
     ReputationWorker,
     RecommendationEngine,
+    RecommendationsWorker,
     ClusteringService,
   ],
   controllers: [RecommendationsController],

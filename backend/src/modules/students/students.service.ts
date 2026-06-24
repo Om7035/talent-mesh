@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { UpdateStudentProfileDto, AddSkillDto, AddCertificationDto, StudentSearchDto } from './dto/student.dto';
+import { RecommendationEngine } from '../recommendations/recommendation.engine';
 
 @Injectable()
 export class StudentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly recommendationEngine: RecommendationEngine,
+  ) {}
 
   async getProfile(userId: string) {
     const student = await this.prisma.student.findUnique({
@@ -51,11 +55,15 @@ export class StudentsService {
 
     if (!skillId) throw new Error('Skill ID or Name required');
 
-    return this.prisma.studentSkill.upsert({
+    const result = await this.prisma.studentSkill.upsert({
       where: { studentId_skillId: { studentId: student.id, skillId } },
       update: { level: dto.level },
       create: { studentId: student.id, skillId, level: dto.level },
     });
+
+    await this.recommendationEngine.enqueueForStudent(student.id);
+
+    return result;
   }
 
   async removeSkill(userId: string, skillId: string) {
@@ -85,7 +93,7 @@ export class StudentsService {
     return this.prisma.contract.findMany({
       where: { studentId, status: { in: ['COMPLETED', 'RELEASED'] } },
       include: {
-        project: true,
+        project: { include: { skills: { include: { skill: true } }, client: { select: { companyName: true } } } },
         reviews: { where: { revieweeId: studentId } },
       },
       orderBy: { completedAt: 'desc' },

@@ -25,18 +25,21 @@ export default function StudentDashboard() {
   const { user, isLoading: authLoading } = useRequireAuth()
   const [profile, setProfile] = useState<any>(null)
   const [projects, setProjects] = useState<any[]>([])
+  const [recommendations, setRecommendations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
     async function fetchData() {
       try {
-        const [profileData, projectsData] = await Promise.all([
+        const [profileData, projectsData, recommendationsData] = await Promise.all([
           apiClient('/students/me'),
           apiClient('/applications/my'),
+          apiClient('/recommendations/for-me?limit=5').catch(() => []),
         ])
         setProfile(profileData)
         setProjects(projectsData?.applications || projectsData || [])
+        setRecommendations(Array.isArray(recommendationsData) ? recommendationsData : [])
       } catch (err) {
         console.error('Failed to fetch student data:', err)
       } finally {
@@ -293,6 +296,37 @@ export default function StudentDashboard() {
                     </div>
                   )
                 })()}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* AI Recommended Projects */}
+        {recommendations.length > 0 && (
+          <motion.div variants={itemVariants}>
+            <Card glass>
+              <CardHeader>
+                <CardTitle>Recommended For You</CardTitle>
+                <CardDescription>AI-matched projects based on your skills, reputation, and difficulty fit</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {recommendations.map((rec: any) => (
+                    <Link
+                      key={rec.id}
+                      href={`/marketplace/${rec.project?.id}`}
+                      className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 transition-all"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{rec.project?.title}</p>
+                        <p className="text-xs text-foreground/50">{rec.project?.client?.companyName || 'Client'} · ₹{Number(rec.project?.budget).toLocaleString()}</p>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider font-medium px-2.5 py-1 rounded-full border bg-violet-500/10 text-violet-400 border-violet-500/20">
+                        {Math.round(rec.matchScore)}% match
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </motion.div>

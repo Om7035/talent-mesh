@@ -9,12 +9,18 @@ import { PrismaService } from '../../database/prisma.service';
 import { CreateProjectDto, UpdateProjectDto, ProjectQueryDto } from './dto/project.dto';
 import { ProjectStatus, Role } from '@prisma/client';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { SkillsService } from '../skills/skills.service';
+import { RecommendationEngine } from '../recommendations/recommendation.engine';
 
 @Injectable()
 export class ProjectsService {
   private readonly logger = new Logger(ProjectsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly skillsService: SkillsService,
+    private readonly recommendationEngine: RecommendationEngine,
+  ) {}
 
   // ─────────────────────────────────────────────────────────────────
   // CREATE
@@ -28,7 +34,14 @@ export class ProjectsService {
 
     const skillConnections = dto.skillIds?.map((id) => ({ skillId: id })) ?? [];
 
-    return this.prisma.project.create({
+    if (dto.skillNames?.length) {
+      const resolvedSkills = await Promise.all(
+        dto.skillNames.map((name) => this.skillsService.findOrCreate(name)),
+      );
+      skillConnections.push(...resolvedSkills.map((s) => ({ skillId: s.id })));
+    }
+
+    const project = await this.prisma.project.create({
       data: {
         clientId: client.id,
         title: dto.title,
@@ -48,6 +61,10 @@ export class ProjectsService {
         client: { include: { user: { select: { name: true } } } },
       },
     });
+
+    await this.recommendationEngine.enqueueForProject(project.id);
+
+    return project;
   }
 
   // ─────────────────────────────────────────────────────────────────

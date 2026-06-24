@@ -15,7 +15,18 @@ export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
 
-  const categories = ['All', 'Web', 'Mobile', 'Design', 'Data', 'AI', 'Backend']
+  const CATEGORY_LABELS: Record<string, string> = {
+    'All': 'all',
+    'Web': 'Web Development',
+    'Mobile': 'Mobile Development',
+    'Design': 'Design',
+    'Data': 'Data & Analytics',
+    'AI/ML': 'AI/ML',
+    'Backend': 'Backend',
+    'Gaming': 'Gaming',
+    'Other': 'Other',
+  }
+  const categories = Object.keys(CATEGORY_LABELS)
 
   useEffect(() => {
     async function fetchProjects() {
@@ -35,8 +46,7 @@ export default function MarketplacePage() {
     const matchesSearch =
       project.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === 'all' || 
-      project.skills?.some((s:any) => s.skill?.name?.toLowerCase().includes(selectedCategory.toLowerCase()))
+    const matchesCategory = selectedCategory === 'all' || project.category === selectedCategory
     return matchesSearch && matchesCategory
   })
 
@@ -81,9 +91,9 @@ export default function MarketplacePage() {
                 {categories.map((category) => (
                   <button
                     key={category}
-                    onClick={() => setSelectedCategory(category === 'All' ? 'all' : category)}
+                    onClick={() => setSelectedCategory(CATEGORY_LABELS[category])}
                     className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                      selectedCategory === (category === 'All' ? 'all' : category)
+                      selectedCategory === CATEGORY_LABELS[category]
                         ? 'bg-foreground text-background shadow-[0_0_15px_rgba(255,255,255,0.15)] scale-105'
                         : 'bg-white/5 border border-white/10 text-foreground/70 hover:text-foreground hover:bg-white/10 hover:border-white/20'
                     }`}
@@ -125,7 +135,7 @@ export default function MarketplacePage() {
                               {project.client?.companyName?.slice(0, 1) || 'C'}
                             </div>
                             <p className="text-xs text-foreground/60">{project.client?.companyName || 'Verified Client'}</p>
-                            {project.status === 'OPEN' && (
+                            {(project.status === 'PUBLISHED' || project.status === 'APPLICATIONS_OPEN') && (
                               <span className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">HIRING</span>
                             )}
                           </div>
@@ -140,9 +150,15 @@ export default function MarketplacePage() {
                             <div className="w-px h-4 bg-white/10" />
                             <div className="flex items-center gap-1.5 text-foreground/60">
                               <Clock className="w-4 h-4" />
-                              <span className="capitalize">{project.duration || 'Flexible'}</span>
+                              <span>{project.timelineDays ? `${project.timelineDays} days` : 'Flexible'}</span>
                             </div>
                           </div>
+
+                          {project.category && (
+                            <span className="inline-block text-[10px] uppercase tracking-wider font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded mb-3">
+                              {project.category}
+                            </span>
+                          )}
 
                           <div className="flex flex-wrap gap-1.5 mb-6">
                             {(project.skills || []).slice(0, 3).map((s: any) => (

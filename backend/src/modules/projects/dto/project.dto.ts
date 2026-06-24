@@ -68,6 +68,12 @@ export class CreateProjectDto {
   @IsArray()
   @IsUUID('4', { each: true })
   skillIds?: string[];
+
+  @ApiPropertyOptional({ type: [String], description: 'Array of skill names; created if they do not already exist' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  skillNames?: string[];
 }
 
 export class UpdateProjectDto extends PartialType(CreateProjectDto) {}

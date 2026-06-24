@@ -3,6 +3,7 @@
 import { Navbar } from '@/components/layout/navbar'
 import { motion } from 'framer-motion'
 import { Users, Globe, Zap, Target } from 'lucide-react'
+import Link from 'next/link'
 
 export default function AboutPage() {
   const values = [
@@ -26,20 +27,6 @@ export default function AboutPage() {
       title: 'Merit-Based',
       description: 'Success is based on skills and work quality, not background or connections',
     },
-  ]
-
-  const team = [
-    { name: 'Rahul Sharma', role: 'Founder & CEO', image: 'R' },
-    { name: 'Priya Patel', role: 'Co-founder, Product', image: 'P' },
-    { name: 'Aditya Verma', role: 'Head of Engineering', image: 'A' },
-    { name: 'Sarah Williams', role: 'Head of Partnerships', image: 'S' },
-  ]
-
-  const timeline = [
-    { year: '2023', title: 'Founded', description: 'TalentMesh AI was founded with a vision to transform talent discovery' },
-    { year: '2023', title: 'Beta Launch', description: 'Launched beta with 100 students and 20 companies' },
-    { year: '2024', title: 'Growth', description: 'Scaled to 5,000+ students and 500+ projects' },
-    { year: '2024', title: 'Series A', description: 'Raised $2M in Series A funding' },
   ]
 
   return (
@@ -112,72 +99,6 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Timeline */}
-        <section className="py-20 bg-background border-t border-border">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.h2
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-3xl font-bold text-center mb-12"
-            >
-              Our Journey
-            </motion.h2>
-            <div className="space-y-8">
-              {timeline.map((event, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: idx % 2 === 0 ? -20 : 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  className={`flex gap-6 ${idx % 2 === 1 ? 'flex-row-reverse' : ''}`}
-                >
-                  <div className="flex-1">
-                    <div className="font-semibold text-2xl text-accent mb-2">{event.year}</div>
-                    <h3 className="font-semibold mb-2">{event.title}</h3>
-                    <p className="text-foreground/60">{event.description}</p>
-                  </div>
-                  <div className="hidden md:flex items-center">
-                    <div className="w-4 h-4 rounded-full bg-accent"></div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Team */}
-        <section className="py-20 bg-card border-t border-border">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.h2
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-3xl font-bold text-center mb-12"
-            >
-              Leadership Team
-            </motion.h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {team.map((member, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="text-center"
-                >
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-accent to-purple-500 mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-white">
-                    {member.image}
-                  </div>
-                  <h3 className="font-semibold">{member.name}</h3>
-                  <p className="text-sm text-foreground/60">{member.role}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* CTA */}
         <section className="py-20 bg-gradient-to-r from-accent/20 to-purple-500/20 border-t border-border">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -190,9 +111,9 @@ export default function AboutPage() {
               <p className="text-lg text-foreground/60 mb-8">
                 Be part of the revolution in talent discovery and career growth
               </p>
-              <button className="px-8 py-3 rounded-lg bg-accent text-accent-foreground font-semibold hover:opacity-90 transition-opacity">
+              <Link href="/signup" className="inline-block px-8 py-3 rounded-lg bg-accent text-accent-foreground font-semibold hover:opacity-90 transition-opacity">
                 Get Started Today
-              </button>
+              </Link>
             </motion.div>
           </div>
         </section>

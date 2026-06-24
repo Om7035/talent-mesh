@@ -6,6 +6,7 @@ import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
 import { useEffect, useState } from 'react'
 import { Loader2, Briefcase } from 'lucide-react'
+import Link from 'next/link'
 
 export default function ClientProjects() {
   const { user } = useRequireAuth()
@@ -43,23 +44,26 @@ export default function ClientProjects() {
         ) : (
           <div className="grid gap-4">
             {projects.map(project => (
-              <Card glass key={project.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="font-bold text-lg">{project.title}</h3>
-                      <p className="text-sm text-foreground/60 mt-1">{project.description}</p>
+              <Link key={project.id} href={`/client/projects/${project.id}`} className="block">
+                <Card glass className="hover:border-blue-500/30 transition-colors cursor-pointer">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="font-bold text-lg">{project.title}</h3>
+                        <p className="text-sm text-foreground/60 mt-1 line-clamp-2">{project.description}</p>
+                      </div>
+                      <span className="text-[10px] uppercase font-bold px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex-shrink-0">
+                        {project.status.replace('_', ' ')}
+                      </span>
                     </div>
-                    <span className="text-[10px] uppercase font-bold px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex-shrink-0">
-                      {project.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <div className="mt-4 flex gap-4 text-sm text-foreground/70">
-                    <div><strong>Budget:</strong> ₹{project.budget?.toLocaleString()}</div>
-                    <div><strong>Duration:</strong> {project.duration || 'Flexible'}</div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="mt-4 flex gap-4 text-sm text-foreground/70">
+                      <div><strong>Budget:</strong> ₹{project.budget?.toLocaleString()}</div>
+                      <div><strong>Timeline:</strong> {project.timelineDays} days</div>
+                      <div><strong>Applicants:</strong> {project._count?.applications ?? 0}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         )}

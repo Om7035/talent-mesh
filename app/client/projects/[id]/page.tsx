@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
 import { useEffect, useState } from 'react'
-import { Loader2, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle2, ShieldAlert, IndianRupee, Clock, Star, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
@@ -17,29 +17,52 @@ export default function ClientProjectDetailsPage({ params }: { params: { id: str
   const router = useRouter()
   const [project, setProject] = useState<any>(null)
   const [contract, setContract] = useState<any>(null)
+  const [applications, setApplications] = useState<any[]>([])
+  const [candidates, setCandidates] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
+  const [hiringId, setHiringId] = useState<string | null>(null)
   const [approveDialogOpen, setApproveDialogOpen] = useState(false)
   const [disputeDialogOpen, setDisputeDialogOpen] = useState(false)
   const [disputeReason, setDisputeReason] = useState('')
 
   const fetchData = () => {
-    // In a real implementation, you would fetch project and contract details.
-    // For this simulation, we'll hit endpoints that would exist.
-    apiClient(`/projects/${params.id}`)
-      .then(projData => setProject(projData))
-      .catch(() => {})
-
-    apiClient(`/contracts/project/${params.id}`)
-      .then(contractData => setContract(contractData))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    setLoading(true)
+    Promise.all([
+      apiClient(`/projects/${params.id}`).catch(() => null),
+      apiClient(`/contracts/project/${params.id}`).catch(() => null),
+      apiClient(`/projects/${params.id}/applications`).catch(() => []),
+      apiClient(`/recommendations/project/${params.id}/candidates?limit=5`).catch(() => []),
+    ]).then(([projData, contractData, appsData, candidatesData]) => {
+      setProject(projData)
+      setContract(contractData)
+      setApplications(Array.isArray(appsData) ? appsData : [])
+      setCandidates(Array.isArray(candidatesData) ? candidatesData : [])
+      setLoading(false)
+    })
   }
 
   useEffect(() => {
     if (!user) return
     fetchData()
   }, [user])
+
+  const handleSelectStudent = async (applicationId: string) => {
+    setHiringId(applicationId)
+    try {
+      await apiClient(`/applications/${applicationId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'ACCEPTED' }),
+      })
+      await apiClient(`/contracts/from-application/${applicationId}`, { method: 'POST' })
+      toast.success('Student hired! Fund the escrow to get started.')
+      fetchData()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to hire student.')
+    } finally {
+      setHiringId(null)
+    }
+  }
 
   const handleFundEscrow = async () => {
     try {
@@ -103,26 +126,38 @@ export default function ClientProjectDetailsPage({ params }: { params: { id: str
       <div className="space-y-6 max-w-5xl">
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin" /></div>
-        ) : !project && !contract ? (
-           <div>Project data not available. (You need to implement the backend GET endpoint for this page)</div>
+        ) : !project ? (
+           <div className="text-foreground/60">Project not found.</div>
         ) : (
           <>
             <div>
-              <h1 className="text-3xl font-bold">Project Details</h1>
-              <p className="text-foreground/60">Manage your project and escrow status.</p>
+              <h1 className="text-3xl font-bold">{project.title}</h1>
+              <p className="text-foreground/60">{project.category} · {project.difficulty}</p>
             </div>
 
             <Card glass>
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-xl font-bold mb-2">Status: {contract?.status || project?.status || 'POSTED'}</h2>
+              <CardContent className="p-6 space-y-4">
+                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{project.description}</p>
+                <div className="flex flex-wrap items-center gap-4 text-sm bg-black/20 p-4 rounded-xl border border-white/5">
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-400">
+                    <IndianRupee className="w-4 h-4" /><span>{Number(project.budget).toLocaleString()}</span>
                   </div>
+                  <div className="w-px h-4 bg-white/10" />
+                  <div className="flex items-center gap-1.5 text-foreground/60">
+                    <Clock className="w-4 h-4" /><span>{project.timelineDays} days</span>
+                  </div>
+                  <div className="w-px h-4 bg-white/10" />
+                  <span className="text-foreground/60">Status: {contract?.status || project.status}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(project.skills || []).map((s: any) => (
+                    <span key={s.skillId} className="text-xs bg-white/5 border border-white/10 px-2 py-1 rounded text-foreground/70">{s.skill?.name}</span>
+                  ))}
                 </div>
 
                 {/* ESCROW ACTIONS BASED ON CONTRACT STATUS */}
                 {contract?.status === 'ASSIGNED' && (
-                  <div className="mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
+                  <div className="mt-2 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-amber-500 flex items-center gap-2">
                         <AlertCircle className="w-5 h-5" /> Action Required: Fund Escrow
@@ -138,14 +173,14 @@ export default function ClientProjectDetailsPage({ params }: { params: { id: str
                 )}
 
                 {contract?.status === 'IN_PROGRESS' && (
-                  <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <div className="mt-2 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
                     <h4 className="font-bold text-blue-400">Escrow Funded</h4>
                     <p className="text-sm text-blue-400/80 mt-1">Funds are safely locked in escrow. The student is currently working.</p>
                   </div>
                 )}
 
                 {contract?.status === 'SUBMITTED' && (
-                  <div className="mt-6 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-4">
+                  <div className="mt-2 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-4">
                     <div>
                       <h4 className="font-bold text-purple-400">Work Submitted for Review</h4>
                       <p className="text-sm text-purple-400/80 mt-1">The student has submitted their deliverables. Please review and approve to release funds.</p>
@@ -160,9 +195,84 @@ export default function ClientProjectDetailsPage({ params }: { params: { id: str
                     </div>
                   </div>
                 )}
-
               </CardContent>
             </Card>
+
+            {/* Applicants — only relevant before a student is hired */}
+            {!contract && (
+              <Card glass>
+                <CardHeader>
+                  <CardTitle>Applicants ({applications.length})</CardTitle>
+                  <CardDescription>Review students who applied and select one to hire</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {applications.length === 0 ? (
+                    <p className="text-sm text-foreground/50 py-8 text-center">No applications yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {applications.map((app: any) => (
+                        <div key={app.id} className="p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <h4 className="font-semibold text-sm">{app.student?.user?.name}</h4>
+                              <p className="text-xs text-foreground/50">{app.student?.college?.name}</p>
+                              <div className="flex items-center gap-1 mt-1">
+                                <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                                <span className="text-xs font-medium">{app.student?.reputationScore?.toFixed(1)}</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] uppercase tracking-wider font-medium px-2.5 py-1 rounded-full border bg-yellow-500/10 text-yellow-400 border-yellow-500/20">{app.status}</span>
+                              {app.status === 'PENDING' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleSelectStudent(app.id)}
+                                  disabled={hiringId === app.id}
+                                  className="block mt-2 bg-blue-600 hover:bg-blue-500 text-xs"
+                                >
+                                  {hiringId === app.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Hire This Student'}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          {app.coverLetter && <p className="text-xs text-foreground/60 mt-3 italic">"{app.coverLetter}"</p>}
+                          <div className="flex flex-wrap gap-1.5 mt-3">
+                            {(app.student?.skills || []).slice(0, 4).map((s: any) => (
+                              <span key={s.skillId} className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded text-foreground/60">{s.skill?.name}</span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* AI-Matched Candidates */}
+            {!contract && candidates.length > 0 && (
+              <Card glass>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-violet-400" /> AI-Matched Candidates</CardTitle>
+                  <CardDescription>Top students matched to this project, even if they haven't applied yet</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {candidates.map((c: any) => (
+                      <div key={c.student.id} className="flex items-center justify-between p-3 rounded-lg border border-white/5">
+                        <div>
+                          <p className="text-sm font-medium">{c.student?.user?.name}</p>
+                          <p className="text-xs text-foreground/50">{c.student?.college?.name}</p>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wider font-medium px-2.5 py-1 rounded-full border bg-violet-500/10 text-violet-400 border-violet-500/20">
+                          {Math.round(c.matchScore)}% match
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
 
@@ -193,8 +303,8 @@ export default function ClientProjectDetailsPage({ params }: { params: { id: str
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              <Input 
-                placeholder="Reason for dispute..." 
+              <Input
+                placeholder="Reason for dispute..."
                 value={disputeReason}
                 onChange={(e) => setDisputeReason(e.target.value)}
                 autoFocus

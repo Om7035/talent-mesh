@@ -81,7 +81,6 @@ export function Navbar({ userRole }: { userRole?: string }) {
               <>
                 <Link href="/about" className="px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-white/5 rounded-md transition-all duration-200">About</Link>
                 <Link href="/features" className="px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-white/5 rounded-md transition-all duration-200">Features</Link>
-                <Link href="/pricing" className="px-3 py-2 text-sm font-medium text-foreground/70 hover:text-foreground hover:bg-white/5 rounded-md transition-all duration-200">Pricing</Link>
               </>
             )}
             {user && (
