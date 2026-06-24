@@ -2,10 +2,14 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException,
 import { PrismaService } from '../../database/prisma.service';
 import { CreateApplicationDto, UpdateApplicationStatusDto } from './dto/application.dto';
 import { ApplicationStatus, ProjectStatus } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async apply(studentUserId: string, projectId: string, dto: CreateApplicationDto) {
     const student = await this.prisma.student.findUnique({ where: { userId: studentUserId } });
@@ -25,7 +29,7 @@ export class ApplicationsService {
     });
     if (existing) throw new ConflictException('You have already applied to this project.');
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const app = await tx.projectApplication.create({
         data: {
           projectId,
@@ -42,6 +46,22 @@ export class ApplicationsService {
 
       return app;
     });
+
+    const projectWithClient = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      include: { client: { include: { user: true } } },
+    });
+    if (projectWithClient) {
+      await this.notificationsService.send({
+        userId: projectWithClient.client.userId,
+        type: 'APPLICATION_RECEIVED',
+        title: 'New Application Received',
+        message: `A student applied to your project "${projectWithClient.title}".`,
+        actionUrl: `/client/projects/${projectId}`,
+      });
+    }
+
+    return result;
   }
 
   async updateApplication(studentUserId: string, applicationId: string, dto: Partial<CreateApplicationDto>) {
@@ -91,7 +111,7 @@ export class ApplicationsService {
   async updateStatus(clientUserId: string, applicationId: string, status: ApplicationStatus) {
     const application = await this.prisma.projectApplication.findUnique({
       where: { id: applicationId },
-      include: { project: true },
+      include: { project: true, student: true },
     });
 
     if (!application) throw new NotFoundException();
@@ -105,8 +125,8 @@ export class ApplicationsService {
       throw new BadRequestException('Cannot update applications for closed projects.');
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.projectApplication.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedApp = await tx.projectApplication.update({
         where: { id: applicationId },
         data: { status },
       });
@@ -119,8 +139,28 @@ export class ApplicationsService {
         });
       }
 
-      return updated;
+      return updatedApp;
     });
+
+    if (status === 'ACCEPTED') {
+      await this.notificationsService.send({
+        userId: application.student.userId,
+        type: 'APPLICATION_ACCEPTED',
+        title: 'Application Accepted!',
+        message: `You've been accepted for "${application.project.title}". A contract will be created shortly.`,
+        actionUrl: `/student/projects/${application.projectId}`,
+      });
+    } else if (status === 'REJECTED') {
+      await this.notificationsService.send({
+        userId: application.student.userId,
+        type: 'APPLICATION_REJECTED',
+        title: 'Application Update',
+        message: `Your application for "${application.project.title}" was not selected this time.`,
+        actionUrl: `/student/projects`,
+      });
+    }
+
+    return updated;
   }
 
   async getMyApplications(studentUserId: string) {

@@ -63,8 +63,11 @@ async function main() {
   const mitwpu = await prisma.college.create({
     data: { name: 'MIT World Peace University', domain: 'mitwpu.edu.in', city: 'Pune', country: 'India', isVerified: true },
   });
+  const scoe = await prisma.college.create({
+    data: { name: 'Sinhgad College of Engineering (SCOE)', domain: 'scoe.edu.in', city: 'Pune', country: 'India', isVerified: true },
+  });
 
-  const colleges = [coep, pict, mitwpu];
+  const colleges = [coep, pict, mitwpu, scoe];
   const cseDeps = await Promise.all(colleges.map(c => 
     prisma.department.create({ data: { name: 'Computer Engineering', collegeId: c.id } })
   ));
@@ -111,7 +114,8 @@ async function main() {
   const tpos = [
     { email: 'milind@coep.org.in', name: 'Dr. Milind Joshi', collegeId: coep.id },
     { email: 'sanjay@pict.edu', name: 'Prof. Sanjay Patil', collegeId: pict.id },
-    { email: 'ramesh@mitwpu.edu.in', name: 'Dr. Ramesh Kulkarni', collegeId: mitwpu.id }
+    { email: 'ramesh@mitwpu.edu.in', name: 'Dr. Ramesh Kulkarni', collegeId: mitwpu.id },
+    { email: 'sunil@scoe.edu.in', name: 'Dr. Sunil Bhosale', collegeId: scoe.id }
   ];
   for (const t of tpos) {
     const u = await prisma.user.create({ data: { email: t.email, passwordHash: hash('Pass123!'), name: t.name, role: Role.TPO, wallet: { create: { balance: 0 } } } });
@@ -462,6 +466,7 @@ async function main() {
   console.log('  Admin:     admin@talentmesh.in / Admin123!');
   console.log('  Client:    rahul@techsolutions.in');
   console.log('  TPO:       milind@coep.org.in');
+  console.log('  TPO (SCOE): sunil@scoe.edu.in');
   console.log('  Recruiter: sunita@tcs.com');
   console.log('  Student:   rohan0@student.in (Elite, COEP)');
   console.log('  Student:   siddharth15@student.in (Beginner, COEP)\n');
