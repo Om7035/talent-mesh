@@ -40,6 +40,27 @@ export class AdminController {
     return this.adminService.getUsers(Number(page), Number(limit), role, search);
   }
 
+  @Get('projects')
+  @ApiOperation({ summary: 'Get paginated projects across all clients [ADMIN]' })
+  getProjects(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.adminService.getProjects(Number(page), Number(limit), status, search);
+  }
+
+  @Patch('projects/:id')
+  @ApiOperation({ summary: 'Admin override: cancel or archive any project [ADMIN]' })
+  adminUpdateProject(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() data: { status: 'CANCELLED' | 'ARCHIVED' },
+  ) {
+    return this.adminService.adminUpdateProject(user.sub, id, data.status);
+  }
+
   @Post('users/:id/ban')
   @ApiOperation({ summary: 'Ban a user [ADMIN]' })
   banUser(

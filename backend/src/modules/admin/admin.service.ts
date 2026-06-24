@@ -65,6 +65,58 @@ export class AdminService {
     };
   }
 
+  async getProjects(page = 1, limit = 20, status?: string, search?: string) {
+    const where: any = {};
+    if (status) where.status = status;
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    const [projects, total] = await Promise.all([
+      this.prisma.project.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          client: { select: { companyName: true, user: { select: { name: true } } } },
+          _count: { select: { applications: true } }
+        },
+      }),
+      this.prisma.project.count({ where }),
+    ]);
+
+    return {
+      projects,
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
+    };
+  }
+
+  async adminUpdateProject(adminUserId: string, projectId: string, status: 'CANCELLED' | 'ARCHIVED') {
+    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) throw new NotFoundException('Project not found');
+    if (project.status === status) throw new BadRequestException(`Project is already ${status}`);
+
+    const updated = await this.prisma.project.update({
+      where: { id: projectId },
+      data: { status }
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: adminUserId,
+        action: status === 'CANCELLED' ? 'PROJECT_CANCELLED_BY_ADMIN' : 'PROJECT_ARCHIVED_BY_ADMIN',
+        resource: 'Project',
+        resourceId: projectId,
+      }
+    });
+
+    return updated;
+  }
+
   /** Hard ban: blocks login entirely. */
   async banUser(adminUserId: string, targetUserId: string, reason: string) {
     const result = await this.prisma.$transaction(async (tx) => {

@@ -85,7 +85,7 @@ export default function AdminDashboard() {
                           </div>
                           <div className="flex items-center gap-4">
                             <span className="text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">{item.status}</span>
-                            <Link href="/admin/disputes" className="text-xs bg-accent text-accent-foreground px-3 py-1 rounded hover:opacity-90 transition-opacity">
+                            <Link href={`/admin/disputes?id=${item.id}`} className="text-xs bg-accent text-accent-foreground px-3 py-1 rounded hover:opacity-90 transition-opacity">
                               Review
                             </Link>
                           </div>
