@@ -63,7 +63,7 @@ export function Navbar({ userRole }: { userRole?: string }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 gap-8">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
+          <Link href={user ? getDashboardPath(user.role) : "/"} className="flex items-center gap-2.5 flex-shrink-0 group">
             <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-violet-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:shadow-blue-500/30 transition-all duration-200">
               T
             </div>
