@@ -7,6 +7,7 @@ import { RecommendationEngine } from './recommendation.engine';
 import { RecommendationsWorker } from './recommendations.worker';
 import { ClusteringService } from './clustering.service';
 import { RecommendationsController } from './recommendations.controller';
+import { LeaderboardModule } from '../leaderboard/leaderboard.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { RecommendationsController } from './recommendations.controller';
       { name: QUEUE_NAMES.REPUTATION },
       { name: QUEUE_NAMES.RECOMMENDATIONS },
     ),
+    LeaderboardModule,
   ],
   providers: [
     ReputationEngine,

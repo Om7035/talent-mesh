@@ -4,6 +4,7 @@ import { Queue } from 'bullmq';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
 import { QUEUE_NAMES, JOB_NAMES } from '../../common/constants/queues.constants';
+import { LeaderboardService } from '../leaderboard/leaderboard.service';
 import Redlock from 'redlock';
 import Redis from 'ioredis';
 
@@ -53,6 +54,7 @@ export class ReputationEngine {
     @InjectQueue(QUEUE_NAMES.REPUTATION) private readonly reputationQueue: Queue,
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly leaderboardService: LeaderboardService,
   ) {
     this.LOCK_TTL_MS = this.configService.get<number>('REPUTATION_LOCK_TTL', 10000);
     this.LOCK_RETRY_COUNT = this.configService.get<number>('REPUTATION_LOCK_RETRY', 3);
@@ -149,12 +151,14 @@ export class ReputationEngine {
         `onTime:${(score.onTimeRate * 100).toFixed(0)}%]`,
       );
 
-      // Enqueue leaderboard re-ranking (separate async job)
-      await this.reputationQueue.add(
-        JOB_NAMES.LEADERBOARD.REBUILD_COLLEGE,
-        { studentId },
-        { delay: 2000 }, // Small delay to batch multiple updates
-      );
+      // Rebuild leaderboard rankings so this student's new score is reflected immediately.
+      // (Previously this enqueued a job under a job name no worker ever processed — dead code
+      // that silently never ran. Calling the rebuild directly is simpler and actually works.)
+      try {
+        await this.leaderboardService.rebuildGlobalRankings();
+      } catch (err) {
+        this.logger.error(`Leaderboard rebuild failed after reputation update for ${studentId}: ${err}`);
+      }
 
     } finally {
       // Always release lock — even if computation fails
