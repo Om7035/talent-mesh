@@ -94,7 +94,7 @@ export class ReputationEngine {
       { studentId },
       { 
         priority,
-        jobId: `reputation:${studentId}`, // Deduplication: only one pending job per student
+        jobId: `reputation-${studentId}`, // Deduplication: only one pending job per student (BullMQ rejects ':' in custom IDs when combined with priority)
         removeOnComplete: true,
         removeOnFail: false,
       },
