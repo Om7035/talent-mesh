@@ -324,7 +324,7 @@ export default function Page() {
 
             {/* Divider */}
             <div className="border-t border-border pt-12 text-center">
-              <p className="text-sm text-foreground/50 font-normal">&copy; 2024 TalentMesh Smart. All rights reserved.</p>
+              <p className="text-sm text-foreground/50 font-normal">&copy; 2024 TalentMesh. All rights reserved.</p>
             </div>
           </div>
         </footer>

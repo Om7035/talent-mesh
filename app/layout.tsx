@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'TalentMesh Smart - Discover Talent Through Proven Work',
+  title: 'TalentMesh - Discover Talent Through Proven Work',
   description: 'A Student Talent Intelligence Platform + Freelance Marketplace for verified talent discovery',
   icons: {
     icon: [
