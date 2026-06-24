@@ -107,15 +107,38 @@ export default function TPODashboard() {
                       <p className="text-sm text-foreground/50 py-8 text-center">No students yet.</p>
                     ) : (
                       <ResponsiveContainer width="100%" height={260}>
-                        <BarChart data={tierData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                          <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                          <YAxis allowDecimals={false} />
-                          <Tooltip />
-                          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                            {tierData.map((entry, i) => (
-                              <Cell key={i} fill={TIER_COLORS[entry.name] || '#3b82f6'} />
-                            ))}
+                        <BarChart data={tierData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorBeginner" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#94a3b8" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#64748b" stopOpacity={0.8}/>
+                            </linearGradient>
+                            <linearGradient id="colorRising" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#2563eb" stopOpacity={0.8}/>
+                            </linearGradient>
+                            <linearGradient id="colorPro" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.8}/>
+                            </linearGradient>
+                            <linearGradient id="colorElite" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#f59e0b" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#d97706" stopOpacity={0.8}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                          <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} />
+                          <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} />
+                          <Tooltip 
+                            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                            contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
+                            itemStyle={{ color: '#fff' }}
+                          />
+                          <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                            {tierData.map((entry, i) => {
+                              const gradId = entry.name === 'BEGINNER' ? 'colorBeginner' : entry.name === 'RISING_TALENT' ? 'colorRising' : entry.name === 'PROFESSIONAL' ? 'colorPro' : 'colorElite'
+                              return <Cell key={i} fill={`url(#${gradId})`} />
+                            })}
                           </Bar>
                         </BarChart>
                       </ResponsiveContainer>
@@ -135,16 +158,38 @@ export default function TPODashboard() {
                       <p className="text-sm text-foreground/50 py-8 text-center">No students yet.</p>
                     ) : (
                       <>
-                        <ResponsiveContainer width="100%" height={220}>
-                          <PieChart>
-                            <Pie data={verificationData} cx="50%" cy="50%" outerRadius={80} dataKey="value">
-                              {verificationData.map((entry, i) => (
-                                <Cell key={i} fill={VERIFICATION_COLORS[entry.name] || '#3b82f6'} />
-                              ))}
-                            </Pie>
-                            <Tooltip />
-                          </PieChart>
-                        </ResponsiveContainer>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <PieChart>
+                          <defs>
+                            <linearGradient id="colorVerified" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10b981" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#059669" stopOpacity={0.8}/>
+                            </linearGradient>
+                            <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#f59e0b" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#d97706" stopOpacity={0.8}/>
+                            </linearGradient>
+                            <linearGradient id="colorRejected" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#ef4444" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#dc2626" stopOpacity={0.8}/>
+                            </linearGradient>
+                            <linearGradient id="colorManual" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={1}/>
+                              <stop offset="95%" stopColor="#2563eb" stopOpacity={0.8}/>
+                            </linearGradient>
+                          </defs>
+                          <Pie data={verificationData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value" stroke="none">
+                            {verificationData.map((entry, i) => {
+                              const gradId = entry.name === 'VERIFIED' ? 'colorVerified' : entry.name === 'PENDING' ? 'colorPending' : entry.name === 'REJECTED' ? 'colorRejected' : 'colorManual'
+                              return <Cell key={i} fill={`url(#${gradId})`} />
+                            })}
+                          </Pie>
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
+                            itemStyle={{ color: '#fff' }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
                         <div className="mt-2 space-y-1.5">
                           {verificationData.map((v, idx) => (
                             <div key={idx} className="flex justify-between text-sm">

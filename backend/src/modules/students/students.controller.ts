@@ -64,6 +64,13 @@ export class StudentsController {
     return this.studentsService.addCertification(user.sub, dto);
   }
 
+  @Delete('me/certifications/:id')
+  @Roles(Role.STUDENT)
+  @ApiOperation({ summary: 'Remove a certification' })
+  removeCertification(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+    return this.studentsService.removeCertification(user.sub, id);
+  }
+
   @Public()
   @Get(':id/portfolio')
   @ApiOperation({ summary: 'Get student portfolio (completed contracts)' })

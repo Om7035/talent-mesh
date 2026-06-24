@@ -89,6 +89,18 @@ export class StudentsService {
     });
   }
 
+  async removeCertification(userId: string, certificationId: string) {
+    const student = await this.prisma.student.findUnique({ where: { userId } });
+    if (!student) throw new NotFoundException();
+
+    return this.prisma.certification.deleteMany({
+      where: {
+        id: certificationId,
+        studentId: student.id,
+      },
+    });
+  }
+
   async getPortfolio(studentId: string) {
     return this.prisma.contract.findMany({
       where: { studentId, status: { in: ['COMPLETED', 'RELEASED'] } },

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { useRequireAuth } from '@/lib/auth-context'
 import { apiClient } from '@/lib/api'
-import { Plus, Trash2, Globe, MapPin, BookOpen, User, Loader2, CheckCircle, Link as LinkIcon, Save, Code2, Briefcase, Phone } from 'lucide-react'
+import { Plus, Trash2, Globe, MapPin, BookOpen, User, Loader2, CheckCircle, Link as LinkIcon, Save, Code2, Briefcase, Phone, Award } from 'lucide-react'
 import { toast } from 'sonner'
 
 const itemVariants = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }
@@ -36,7 +36,10 @@ export default function StudentProfilePage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [newSkillName, setNewSkillName] = useState('')
+  const [newSkillLevel, setNewSkillLevel] = useState('Intermediate')
   const [addingSkill, setAddingSkill] = useState(false)
+  const [addingCert, setAddingCert] = useState(false)
+  const [newCert, setNewCert] = useState({ name: '', issuer: '', issueDate: '', credentialUrl: '' })
   const [formData, setFormData] = useState({
     bio: '', phone: '', location: '', major: '', yearOfStudy: '',
     githubUrl: '', linkedinUrl: '', portfolioUrl: '',
@@ -93,23 +96,36 @@ export default function StudentProfilePage() {
 
   const handleAddSkill = async () => {
     if (!newSkillName.trim()) return
+    const skillName = newSkillName.trim()
+    const level = newSkillLevel
+    
+    // Optimistic UI Update
+    const tempId = `temp-${Date.now()}`
+    const optimisticSkill = { skillId: tempId, skill: { name: skillName }, level }
+    setProfile((prev: any) => ({ ...prev, skills: [...(prev?.skills || []), optimisticSkill] }))
+    setNewSkillName('')
+    setNewSkillLevel('Intermediate')
+    
     setAddingSkill(true)
     try {
       await apiClient('/students/me/skills', {
         method: 'POST',
-        body: JSON.stringify({ skillName: newSkillName.trim(), level: 'Intermediate' }),
+        body: JSON.stringify({ skillName, level }),
       })
       const p = await apiClient('/students/me')
       setProfile(p)
-      setNewSkillName('')
     } catch (err: any) {
       toast.error(err.message || 'Failed to add skill.')
+      // Revert optimistic update on failure
+      setProfile((prev: any) => ({ ...prev, skills: prev.skills.filter((s: any) => s.skillId !== tempId) }))
     } finally {
       setAddingSkill(false)
     }
   }
 
   const handleRemoveSkill = async (skillId: string) => {
+    // If it's a temp ID, do nothing (wait for real ID from API)
+    if (skillId.startsWith('temp-')) return
     try {
       await apiClient(`/students/me/skills/${skillId}`, { method: 'DELETE' })
       setProfile((prev: any) => ({
@@ -117,7 +133,40 @@ export default function StudentProfilePage() {
         skills: prev.skills.filter((s: any) => s.skillId !== skillId),
       }))
     } catch (err: any) {
-      alert(err.message)
+      toast.error(err.message)
+    }
+  }
+
+  const handleAddCert = async () => {
+    if (!newCert.name || !newCert.issuer || !newCert.issueDate) return toast.error('Please fill all required certification fields')
+    
+    setAddingCert(true)
+    try {
+      await apiClient('/students/me/certifications', {
+        method: 'POST',
+        body: JSON.stringify(newCert),
+      })
+      const p = await apiClient('/students/me')
+      setProfile(p)
+      setNewCert({ name: '', issuer: '', issueDate: '', credentialUrl: '' })
+      toast.success('Certification added!')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to add certification.')
+    } finally {
+      setAddingCert(false)
+    }
+  }
+
+  const handleRemoveCert = async (id: string) => {
+    try {
+      await apiClient(`/students/me/certifications/${id}`, { method: 'DELETE' })
+      setProfile((prev: any) => ({
+        ...prev,
+        certifications: prev.certifications.filter((c: any) => c.id !== id),
+      }))
+      toast.success('Certification removed.')
+    } catch (err: any) {
+      toast.error(err.message)
     }
   }
 
@@ -243,7 +292,7 @@ export default function StudentProfilePage() {
               </div>
 
               {/* Add Skill */}
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <div className="flex-1 relative">
                   <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
                   <input
@@ -257,6 +306,18 @@ export default function StudentProfilePage() {
                   <datalist id="skill-suggestions">
                     {availableSkills.map((s: any) => <option key={s.id} value={s.name} />)}
                   </datalist>
+                </div>
+                <div className="w-full sm:w-48 relative">
+                  <select
+                    value={newSkillLevel}
+                    onChange={e => setNewSkillLevel(e.target.value)}
+                    className="w-full px-4 py-2.5 appearance-none rounded-xl border border-white/10 bg-white/5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/30 transition-all"
+                  >
+                    <option value="Beginner" className="bg-background">Beginner</option>
+                    <option value="Intermediate" className="bg-background">Intermediate</option>
+                    <option value="Advanced" className="bg-background">Advanced</option>
+                    <option value="Expert" className="bg-background">Expert</option>
+                  </select>
                 </div>
                 <Button onClick={handleAddSkill} disabled={addingSkill || !newSkillName.trim()} className="bg-blue-600 hover:bg-blue-500">
                   {addingSkill ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
@@ -287,7 +348,57 @@ export default function StudentProfilePage() {
               )}
             </CardContent>
           </Card>
+          {/* Certifications */}
+        <motion.div variants={itemVariants}>
+          <Card glass>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Award className="w-4 h-4" /> Certifications</CardTitle>
+              <CardDescription>Add relevant certifications to stand out to clients</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Existing Certifications */}
+              <div className="space-y-3 mb-6">
+                {(profile?.certifications || []).map((c: any) => (
+                  <div key={c.id} className="flex items-start justify-between p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                    <div>
+                      <h4 className="font-semibold text-sm text-foreground">{c.name}</h4>
+                      <p className="text-xs text-foreground/60">{c.issuer} · {new Date(c.issueDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</p>
+                      {c.credentialUrl && (
+                        <a href={c.credentialUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline mt-1 inline-block">
+                          View Credential
+                        </a>
+                      )}
+                    </div>
+                    <button onClick={() => handleRemoveCert(c.id)} className="p-2 text-foreground/40 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                {(profile?.certifications || []).length === 0 && (
+                  <p className="text-sm text-foreground/40 text-center py-4">No certifications added yet.</p>
+                )}
+              </div>
+
+              {/* Add New Certification Form */}
+              <div className="pt-4 border-t border-white/10 space-y-4">
+                <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">Add Certification</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label="Certification Name *" value={newCert.name} onChange={(e: any) => setNewCert(p => ({ ...p, name: e.target.value }))} placeholder="e.g. AWS Certified Developer" />
+                  <Input label="Issuing Organization *" value={newCert.issuer} onChange={(e: any) => setNewCert(p => ({ ...p, issuer: e.target.value }))} placeholder="e.g. Amazon Web Services" />
+                  <Input label="Issue Date *" type="date" value={newCert.issueDate} onChange={(e: any) => setNewCert(p => ({ ...p, issueDate: e.target.value }))} />
+                  <Input label="Credential URL (Optional)" value={newCert.credentialUrl} onChange={(e: any) => setNewCert(p => ({ ...p, credentialUrl: e.target.value }))} placeholder="https://..." />
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={handleAddCert} disabled={addingCert || !newCert.name || !newCert.issuer || !newCert.issueDate} className="bg-emerald-600 hover:bg-emerald-500">
+                    {addingCert ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />} Add Certification
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
+
+      </motion.div>
 
       </motion.div>
     </DashboardLayout>
