@@ -292,6 +292,11 @@ export class TpoService {
   async pushStudentToRecruiter(tpoUserId: string, studentId: string, recruiterId: string, message?: string) {
     const { tpo, student } = await this.assertOwnCollegeStudent(tpoUserId, studentId);
 
+    const fullTpo = await this.prisma.tPO.findUnique({ where: { id: tpo.id }, include: { college: true } });
+    const fullStudent = await this.prisma.student.findUnique({ where: { id: student.id }, include: { user: true } });
+    
+    if (!fullTpo || !fullStudent) throw new Error('Data sync error');
+
     // 1. Verify active partnership
     const partnership = await this.prisma.collegePartnership.findUnique({
       where: {
@@ -323,7 +328,7 @@ export class TpoService {
       userId: partnership.recruiter.userId,
       type: 'SYSTEM_ALERT',
       title: 'Top Talent Pushed to You',
-      message: `${tpo.college.name} directly pushed a student (${student.user.name}) to your talent pipeline.${message ? ` Note: ${message}` : ''}`,
+      message: `${fullTpo.college.name} directly pushed a student (${fullStudent.user.name}) to your talent pipeline.${message ? ` Note: ${message}` : ''}`,
       actionUrl: '/dashboard/recruiter/network', // adjust url based on recruiter dashboard
     });
 

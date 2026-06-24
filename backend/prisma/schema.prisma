@@ -878,20 +878,3 @@ model DirectTalentPush {
   @@index([studentId])
   @@map("direct_talent_pushes")
 }
-
-model Message {
-  id             String       @id @default(uuid())
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  senderId       String
-  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  content        String
-  isRead         Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-
-  @@index([conversationId, createdAt(sort: Desc)])
-  @@index([senderId])
-  @@map("messages")
-}
-
-
